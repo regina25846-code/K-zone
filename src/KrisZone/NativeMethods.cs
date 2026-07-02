@@ -112,5 +112,10 @@ namespace KrisZone
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+
+        // DWM — 창의 실제 보이는 영역 (shadow 제외)
+        public const uint DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmGetWindowAttribute(IntPtr hwnd, uint dwAttribute, out RECT pvAttribute, int cbAttribute);
     }
 }

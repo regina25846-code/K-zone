@@ -53,6 +53,19 @@ namespace KrisZone
             return -1;
         }
 
+        // 창의 보이지 않는 shadow/테두리 inset 계산 (파워토이즈 방식)
+        private static (int l, int t, int r, int b) GetWindowInsets(IntPtr hwnd)
+        {
+            NativeMethods.GetWindowRect(hwnd, out var wr);
+            if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) == 0)
+            {
+                return (fr.Left - wr.Left, fr.Top - wr.Top,
+                        wr.Right - fr.Right, wr.Bottom - fr.Bottom);
+            }
+            return (0, 0, 0, 0);
+        }
+
         // Snap window to zone (in logical coordinates → SetWindowPos uses physical)
         public static void SnapWindow(IntPtr hwnd, ZoneRect zone, MonitorInfo monitor)
         {
@@ -67,7 +80,10 @@ namespace KrisZone
             int pw = (int)Math.Round(r.Width * scale);
             int ph = (int)Math.Round(r.Height * scale);
 
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
+            // 파워토이즈 방식: 창 shadow 영역만큼 보정
+            var (il, it, ir, ib) = GetWindowInsets(hwnd);
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+                px - il, py - it, pw + il + ir, ph + it + ib,
                 NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
         }
 
@@ -89,7 +105,9 @@ namespace KrisZone
             int pw = (int)Math.Round((maxX - minX) * scale);
             int ph = (int)Math.Round((maxY - minY) * scale);
 
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
+            var (il, it, ir, ib) = GetWindowInsets(hwnd);
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+                px - il, py - it, pw + il + ir, ph + it + ib,
                 NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
         }
     }
