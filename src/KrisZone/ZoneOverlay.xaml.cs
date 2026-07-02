@@ -80,7 +80,7 @@ namespace KrisZone
                 Canvas.SetTop(rect, y + gap);
                 ZoneCanvas.Children.Add(rect);
 
-                if (s.ShowZoneNumber)
+                if (SettingsManager.Current.ShowZoneNumber)
                 {
                     var tb = new TextBlock
                     {
