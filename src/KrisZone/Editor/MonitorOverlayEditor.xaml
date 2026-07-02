@@ -68,7 +68,21 @@
                 <ComboBox Grid.Column="2" x:Name="LayoutCombo"
                           Width="160" Background="#2A2A3E" Foreground="White"
                           BorderBrush="#3A3A5E" FontSize="13"
-                          SelectionChanged="LayoutCombo_SelectionChanged"/>
+                          SelectionChanged="LayoutCombo_SelectionChanged">
+                    <ComboBox.ItemContainerStyle>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Foreground" Value="#111827"/>
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Padding" Value="8,5"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter Property="Background" Value="#DBEAFE"/>
+                                    <Setter Property="Foreground" Value="#1E40AF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ComboBox.ItemContainerStyle>
+                </ComboBox>
 
                 <TextBox Grid.Column="4" x:Name="LayoutNameBox"
                          Background="#2A2A3E" Foreground="White"
