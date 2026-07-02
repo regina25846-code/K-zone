@@ -268,7 +268,7 @@ namespace KrisZone.Editor
 
         // ── Settings Panel ────────────────────────────────────────────────────
 
-        private bool _loadingSettings;
+        private bool _loadingSettings = true;
 
         private void LoadSettings()
         {
