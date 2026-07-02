@@ -61,6 +61,7 @@ namespace KrisZone.Models
         public List<ZoneRect> Zones { get; set; } = new();
         public int SensitivityRadius { get; set; } = 20;
         public GridMeta? Grid { get; set; } = GridMeta.Default1x1();
+        public bool IsTemplate { get; set; } = false;
     }
 
     public class MonitorConfig

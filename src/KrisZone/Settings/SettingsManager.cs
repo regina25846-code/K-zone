@@ -10,7 +10,7 @@ namespace KrisZone.Settings
     internal static class SettingsManager
     {
         private static readonly string ConfigDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KrisZone");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "K-FancyZones");
         private static readonly string ConfigPath = Path.Combine(ConfigDir, "settings.json");
 
         public static AppSettings Current { get; private set; } = new();
@@ -51,7 +51,7 @@ namespace KrisZone.Settings
 
         private static void InitDefaultLayouts()
         {
-            Current.Layouts.AddRange(new[]
+            var defaults = new[]
             {
                 CreateGridLayout(1, 2, "2열"),
                 CreateGridLayout(1, 3, "3열"),
@@ -59,7 +59,9 @@ namespace KrisZone.Settings
                 CreateGridLayout(2, 2, "2x2 그리드"),
                 CreateGridLayout(2, 3, "3x2 그리드"),
                 CreatePriorityGrid(),
-            });
+            };
+            foreach (var l in defaults) l.IsTemplate = true;
+            Current.Layouts.AddRange(defaults);
         }
 
         private const int M = 10000;

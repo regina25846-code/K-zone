@@ -16,6 +16,7 @@ namespace KrisZone.Editor
     public partial class MonitorOverlayEditor : Window
     {
         private readonly MonitorInfo _monitor;
+        private readonly Guid? _initialLayoutId;
         private ZoneLayout? _currentLayout;
         private GridData? _data;
 
@@ -32,9 +33,10 @@ namespace KrisZone.Editor
 
         private readonly Stack<GridMeta> _undoStack = new();
 
-        public MonitorOverlayEditor(MonitorInfo monitor)
+        public MonitorOverlayEditor(MonitorInfo monitor, Guid? initialLayoutId = null)
         {
             _monitor = monitor;
+            _initialLayoutId = initialLayoutId;
             InitializeComponent();
 
             var wa = monitor.WorkArea;
@@ -106,9 +108,10 @@ namespace KrisZone.Editor
                 LayoutCombo.Items.Add(new ComboBoxItem { Content = l.Name, Tag = l });
 
             var cfg = SettingsManager.Current.MonitorConfigs.FirstOrDefault(c => c.MonitorId == _monitor.Id);
-            if (cfg != null)
+            var targetId = _initialLayoutId ?? cfg?.LayoutId;
+            if (targetId.HasValue)
                 foreach (ComboBoxItem item in LayoutCombo.Items)
-                    if (item.Tag is ZoneLayout l && l.Id == cfg.LayoutId)
+                    if (item.Tag is ZoneLayout l && l.Id == targetId.Value)
                     { LayoutCombo.SelectedItem = item; break; }
 
             if (LayoutCombo.SelectedIndex < 0 && LayoutCombo.Items.Count > 0)

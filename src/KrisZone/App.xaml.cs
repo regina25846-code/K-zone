@@ -29,7 +29,7 @@ namespace KrisZone
             BuildTray();
 
             if (SettingsManager.IsFirstRun)
-                OpenOverlayEditor(MonitorManager.Monitors.Count > 0 ? MonitorManager.Monitors[0] : null);
+                OpenLayoutBrowser();
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -43,21 +43,7 @@ namespace KrisZone
         private void BuildTray()
         {
             var menu = new ContextMenuStrip();
-
-            // One entry per monitor
-            if (MonitorManager.Monitors.Count == 1)
-            {
-                menu.Items.Add("레이아웃 편집", null, (_, _) => OpenOverlayEditor(MonitorManager.Monitors[0]));
-            }
-            else
-            {
-                foreach (var m in MonitorManager.Monitors)
-                {
-                    var mon = m;
-                    menu.Items.Add(mon.DisplayName + " 편집", null, (_, _) => OpenOverlayEditor(mon));
-                }
-            }
-
+            menu.Items.Add("K-FancyZones 편집기", null, (_, _) => OpenLayoutBrowser());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("설정", null, (_, _) => OpenSettings());
             menu.Items.Add(new ToolStripSeparator());
@@ -66,16 +52,21 @@ namespace KrisZone
             _trayIcon = new NotifyIcon
             {
                 Icon = GetIcon(),
-                Text = "KrisZone",
+                Text = "K-FancyZones",
                 Visible = true,
                 ContextMenuStrip = menu
             };
-            // Double-click: open editor for monitor under cursor
-            _trayIcon.DoubleClick += (_, _) =>
+            _trayIcon.DoubleClick += (_, _) => OpenLayoutBrowser();
+        }
+
+        private void OpenLayoutBrowser()
+        {
+            Dispatcher.Invoke(() =>
             {
-                var m = MonitorManager.Monitors.Count > 0 ? MonitorManager.Monitors[0] : null;
-                OpenOverlayEditor(m);
-            };
+                var w = new LayoutBrowserWindow();
+                w.Show();
+                w.Activate();
+            });
         }
 
         private void OpenOverlayEditor(MonitorInfo? monitor)

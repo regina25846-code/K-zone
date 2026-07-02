@@ -1,4 +1,4 @@
-name: Build KrisZone
+name: Build K-FancyZones
 
 on:
   push:
@@ -25,16 +25,16 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KrisZone
-          path: publish/KrisZone.exe
+          name: K-FancyZones
+          path: publish/K-FancyZones.exe
 
       - name: Create Release
         if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: KrisZone Latest
-          files: publish/KrisZone.exe
+          name: K-FancyZones Latest
+          files: publish/K-FancyZones.exe
           body: |
             FancyZones 경량 독립 실행 버전
             - .NET 8 Runtime 필요 (Windows 11 기본 포함)
