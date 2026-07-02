@@ -11,7 +11,7 @@ namespace KrisZone
         public static ZoneLayout? GetLayoutForMonitor(MonitorInfo monitor)
         {
             var cfg = SettingsManager.Current.MonitorConfigs.FirstOrDefault(c => c.MonitorId == monitor.Id);
-            if (cfg == null) return SettingsManager.Current.Layouts.FirstOrDefault();
+            if (cfg == null) return null;
             return SettingsManager.Current.Layouts.FirstOrDefault(l => l.Id == cfg.LayoutId);
         }
 

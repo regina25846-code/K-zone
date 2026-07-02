@@ -12,6 +12,7 @@ namespace KrisZone.Settings
         private static readonly string ConfigPath = Path.Combine(ConfigDir, "settings.json");
 
         public static AppSettings Current { get; private set; } = new();
+        public static bool IsFirstRun { get; private set; }
 
         public static void Load()
         {
@@ -21,18 +22,21 @@ namespace KrisZone.Settings
                 {
                     var json = File.ReadAllText(ConfigPath);
                     Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                    IsFirstRun = false;
                 }
                 else
                 {
                     Current = new AppSettings();
                     InitDefaultLayouts();
                     Save();
+                    IsFirstRun = true;
                 }
             }
             catch
             {
                 Current = new AppSettings();
                 InitDefaultLayouts();
+                IsFirstRun = true;
             }
         }
 

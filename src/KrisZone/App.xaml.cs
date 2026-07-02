@@ -27,6 +27,9 @@ namespace KrisZone
             _hotkeys.Install();
 
             BuildTray();
+
+            if (SettingsManager.IsFirstRun)
+                OpenEditor();
         }
 
         protected override void OnExit(ExitEventArgs e)
