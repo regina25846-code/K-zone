@@ -65,22 +65,25 @@ namespace KrisZone.Editor
                 RefreshSplitterHints();
                 return;
             }
-            if (e.Key == Key.S && _activeZone >= 0 && _data != null)
+            if (e.Key == Key.S && _data != null)
             {
-                // 파워토이즈: S = 수평 절반 분할, Shift+S = 수직 절반 분할
-                var orientation = _shiftDown ? Orientation.Vertical : Orientation.Horizontal;
-                var zone = _data.Zones[_activeZone];
-                int position = orientation == Orientation.Vertical
-                    ? (zone.Left + zone.Right) / 2
-                    : (zone.Top + zone.Bottom) / 2;
-                if (_data.CanSplit(_activeZone, position, orientation))
+                int zi = GetZoneAtMousePosition();
+                if (zi >= 0)
                 {
-                    PushUndo();
-                    _data.Split(_activeZone, position, orientation);
-                    SaveCurrentZones();
-                    SetupUI();
+                    var orientation = _shiftDown ? Orientation.Vertical : Orientation.Horizontal;
+                    var zone = _data.Zones[zi];
+                    int position = orientation == Orientation.Vertical
+                        ? (zone.Left + zone.Right) / 2
+                        : (zone.Top + zone.Bottom) / 2;
+                    if (_data.CanSplit(zi, position, orientation))
+                    {
+                        PushUndo();
+                        _data.Split(zi, position, orientation);
+                        SaveCurrentZones();
+                        SetupUI();
+                    }
+                    e.Handled = true;
                 }
-                e.Handled = true;
             }
         }
 
@@ -755,6 +758,27 @@ namespace KrisZone.Editor
                     ((Thumb)AdornerLayer.Children[Math.Min(ri, AdornerLayer.Children.Count - 1)]).Focus();
                 e.Handled = true;
             }
+        }
+
+        // ── 마우스 위치 기반 존 검색 ─────────────────────────────────────────
+
+        private int GetZoneAtMousePosition()
+        {
+            if (_data == null) return -1;
+            var mousePos = Mouse.GetPosition(Preview);
+            double pw = Preview.ActualWidth  > 0 ? Preview.ActualWidth  : Width;
+            double ph = Preview.ActualHeight > 0 ? Preview.ActualHeight : Height;
+
+            double mx = mousePos.X / pw * GridData.Multiplier;
+            double my = mousePos.Y / ph * GridData.Multiplier;
+
+            for (int zi = 0; zi < _data.Zones.Count; zi++)
+            {
+                var z = _data.Zones[zi];
+                if (mx >= z.Left && mx <= z.Right && my >= z.Top && my <= z.Bottom)
+                    return zi;
+            }
+            return -1;
         }
 
         // ── 저장 ─────────────────────────────────────────────────────────────
