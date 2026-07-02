@@ -50,7 +50,7 @@ namespace KrisZone.Editor
             MonitorManager.Refresh();
             MonitorCombo.Items.Clear();
             foreach (var m in MonitorManager.Monitors)
-                MonitorCombo.Items.Add(new ComboBoxItem { Content = $"모니터: {m.Id}", Tag = m });
+                MonitorCombo.Items.Add(new ComboBoxItem { Content = m.DisplayName, Tag = m });
             if (MonitorCombo.Items.Count > 0)
                 MonitorCombo.SelectedIndex = 0;
         }

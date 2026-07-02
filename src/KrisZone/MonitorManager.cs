@@ -9,6 +9,7 @@ namespace KrisZone
     {
         public IntPtr Handle { get; set; }
         public string Id { get; set; } = "";
+        public string DisplayName { get; set; } = "";
         public System.Windows.Rect Bounds { get; set; }   // logical px
         public System.Windows.Rect WorkArea { get; set; }
         public double ScaleFactor { get; set; } = 1.0;
@@ -29,17 +30,22 @@ namespace KrisZone
             var mi = new NativeMethods.MONITORINFOEX { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFOEX>() };
             if (NativeMethods.GetMonitorInfo(hMonitor, ref mi))
             {
-                // Get DPI scale
                 GetDpiForMonitor(hMonitor, 0, out uint dpiX, out _);
                 double scale = dpiX > 0 ? dpiX / 96.0 : 1.0;
 
                 var r = mi.rcMonitor;
                 var w = mi.rcWork;
+                int physW = r.Right - r.Left;
+                int physH = r.Bottom - r.Top;
+                int idx = Monitors.Count + 1;
+                string displayName = $"모니터 {idx}  ({physW}×{physH})";
+
                 Monitors.Add(new MonitorInfo
                 {
                     Handle = hMonitor,
                     Id = mi.szDevice,
-                    Bounds = new System.Windows.Rect(r.Left / scale, r.Top / scale, (r.Right - r.Left) / scale, (r.Bottom - r.Top) / scale),
+                    DisplayName = displayName,
+                    Bounds = new System.Windows.Rect(r.Left / scale, r.Top / scale, physW / scale, physH / scale),
                     WorkArea = new System.Windows.Rect(w.Left / scale, w.Top / scale, (w.Right - w.Left) / scale, (w.Bottom - w.Top) / scale),
                     ScaleFactor = scale
                 });
