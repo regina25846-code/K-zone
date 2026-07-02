@@ -18,7 +18,7 @@
         <!-- 모니터 탭 -->
         <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Disabled" Padding="24,16,24,16">
-            <StackPanel x:Name="MonitorPanel" Orientation="Horizontal"/>
+            <StackPanel x:Name="MonitorPanel" Orientation="Horizontal" HorizontalAlignment="Center"/>
         </ScrollViewer>
 
         <Rectangle Grid.Row="1" Fill="#E5E7EB"/>

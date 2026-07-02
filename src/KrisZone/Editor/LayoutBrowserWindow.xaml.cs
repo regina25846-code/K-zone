@@ -273,6 +273,7 @@ namespace KrisZone.Editor
         {
             if (_selectedMonitor == null) return;
             var editor = new MonitorOverlayEditor(_selectedMonitor, layout.Id);
+            editor.Closed += (_, _) => BuildLayoutCards();
             editor.Show();
             editor.Activate();
         }
