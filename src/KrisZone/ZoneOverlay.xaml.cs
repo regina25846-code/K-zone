@@ -44,9 +44,9 @@ namespace KrisZone
             if (_monitor == null || _layout == null) return;
             ZoneCanvas.Children.Clear();
 
-            // 검정 고투명 배경 + 하늘색 하이라이트
+            // 검정 고투명 테마
             var normalBrush    = new SolidColorBrush(Color.FromArgb(20,  0x00, 0x00, 0x00));
-            var highlightBrush = new SolidColorBrush(Color.FromArgb(60,  0x38, 0xBD, 0xF8));
+            var highlightBrush = new SolidColorBrush(Color.FromArgb(60,  0x00, 0x00, 0x00));
             var borderBrush    = new SolidColorBrush(Color.FromArgb(120, 0xFF, 0xFF, 0xFF));
             var numberBrush    = new SolidColorBrush(Colors.White);
 
