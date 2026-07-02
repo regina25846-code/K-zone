@@ -1,0 +1,39 @@
+name: Build KrisZone
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        run: dotnet publish src/KrisZone/KrisZone.csproj -c Release -r win-x64 --no-self-contained -o publish /p:PublishSingleFile=true /p:DebugType=None /p:DebugSymbols=false
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KrisZone
+          path: publish/KrisZone.exe
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: KrisZone Latest
+          files: publish/KrisZone.exe
+          body: |
+            FancyZones 경량 독립 실행 버전
+            - .NET 8 Runtime 필요 (Windows 11 기본 포함)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
