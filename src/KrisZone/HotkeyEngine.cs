@@ -35,7 +35,8 @@ namespace KrisZone
             if (!SettingsManager.Current.OverrideSnapHotkeys) return;
 
             _form = new HotkeyForm(this);
-            _form.CreateHandle();
+            // Accessing Handle auto-creates the native window handle
+            var _ = _form.Handle;
 
             RegisterHotKey(_form.Handle, 1, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Left);
             RegisterHotKey(_form.Handle, 2, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Right);

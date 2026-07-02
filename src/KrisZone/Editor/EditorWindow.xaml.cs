@@ -152,7 +152,7 @@ namespace KrisZone.Editor
             {
                 Width = Math.Max(0, w - gap * 2),
                 Height = Math.Max(0, h - gap * 2),
-                Fill = new SolidColorBrush(Color.FromArgb(highlight ? 140 : 80, 0x3B, 0x82, 0xF6)),
+                Fill = new SolidColorBrush(Color.FromArgb(highlight ? (byte)140 : (byte)80, 0x3B, 0x82, 0xF6)),
                 Stroke = new SolidColorBrush(Color.FromArgb(200, 0x60, 0xA5, 0xFA)),
                 StrokeThickness = 1.5,
                 RadiusX = 4, RadiusY = 4,
