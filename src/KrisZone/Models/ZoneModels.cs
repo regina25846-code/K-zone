@@ -78,11 +78,11 @@ namespace KrisZone.Models
         public bool ShowZoneNumber { get; set; } = true;
         public bool OverrideSnapHotkeys { get; set; } = false;
         public bool AppLastZone { get; set; } = false;
-        public string ZoneColor { get; set; } = "#AACDFF";
+        public string ZoneColor { get; set; } = "#BAE6FD";
         public string ZoneBorderColor { get; set; } = "#FFFFFF";
-        public string ZoneHighlightColor { get; set; } = "#008CFF";
-        public string ZoneNumberColor { get; set; } = "#000000";
-        public int ZoneHighlightOpacity { get; set; } = 50;
+        public string ZoneHighlightColor { get; set; } = "#38BDF8";
+        public string ZoneNumberColor { get; set; } = "#FFFFFF";
+        public int ZoneHighlightOpacity { get; set; } = 30;
         public List<string> ExcludedApps { get; set; } = new();
         public List<ZoneLayout> Layouts { get; set; } = new();
         public List<MonitorConfig> MonitorConfigs { get; set; } = new();

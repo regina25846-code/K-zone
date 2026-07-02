@@ -44,11 +44,11 @@ namespace KrisZone
             if (_monitor == null || _layout == null) return;
             ZoneCanvas.Children.Clear();
 
-            var s = SettingsManager.Current;
-            var normalBrush = ParseColor(s.ZoneColor, s.ZoneHighlightOpacity);
-            var highlightBrush = ParseColor(s.ZoneHighlightColor, Math.Min(255, s.ZoneHighlightOpacity + 80));
-            var borderBrush = new SolidColorBrush(ParseColorSolid(s.ZoneBorderColor));
-            var numberBrush = new SolidColorBrush(ParseColorSolid(s.ZoneNumberColor));
+            // 하늘색 투명 테마 (고정)
+            var normalBrush    = new SolidColorBrush(Color.FromArgb(55,  0xBA, 0xE6, 0xFD));
+            var highlightBrush = new SolidColorBrush(Color.FromArgb(130, 0x38, 0xBD, 0xF8));
+            var borderBrush    = new SolidColorBrush(Color.FromArgb(160, 0xFF, 0xFF, 0xFF));
+            var numberBrush    = new SolidColorBrush(Colors.White);
 
             var wa = _monitor.WorkArea;
             // Overlay is positioned at monitor.Bounds, so offset by workarea delta
