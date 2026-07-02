@@ -24,6 +24,7 @@ namespace KrisZone
         private MonitorInfo? _currentMonitor;
         private List<int> _highlighted = new();
         private bool _draggingWindowTransparent = false;
+        private long _lastLocationTick = 0;
 
         public DragSnapEngine()
         {
@@ -106,6 +107,11 @@ namespace KrisZone
                 return;
             }
 
+            // 16ms throttle (60fps 이상 이벤트 skip)
+            long now = System.Environment.TickCount64;
+            if (now - _lastLocationTick < 16) return;
+            _lastLocationTick = now;
+
             // Shift 누른 순간 투명화 적용
             if (s.MakeDraggedWindowTransparent)
                 ApplyTransparency(_draggingHwnd);
@@ -140,7 +146,7 @@ namespace KrisZone
 
             if (_overlay == null || !_overlayActive || _currentMonitor?.Handle != monitor.Handle)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                 {
                     _overlay?.Hide();
                     _overlay = new ZoneOverlay();
@@ -151,7 +157,7 @@ namespace KrisZone
             }
             else if (!newHighlighted.SequenceEqual(_highlighted))
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                     _overlay?.UpdateHighlight(newHighlighted));
             }
 
@@ -197,7 +203,7 @@ namespace KrisZone
         {
             if (_overlayActive)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() => _overlay?.Hide());
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(() => _overlay?.Hide());
                 _overlayActive = false;
             }
         }

@@ -17,6 +17,15 @@ namespace KrisZone
         {
             base.OnStartup(e);
 
+            // 크래시 로그
+            AppDomain.CurrentDomain.UnhandledException += (_, ex) =>
+                WriteCrashLog(ex.ExceptionObject?.ToString() ?? "Unknown");
+            DispatcherUnhandledException += (_, ex) =>
+            {
+                WriteCrashLog(ex.Exception?.ToString() ?? "Unknown");
+                ex.Handled = true;
+            };
+
             SettingsManager.Load();
             MonitorManager.Refresh();
 
@@ -86,6 +95,20 @@ namespace KrisZone
                 w.Show();
                 w.Activate();
             });
+        }
+
+        private static void WriteCrashLog(string content)
+        {
+            try
+            {
+                var dir = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "K-FancyZones");
+                System.IO.Directory.CreateDirectory(dir);
+                var path = System.IO.Path.Combine(dir, "crash.log");
+                System.IO.File.AppendAllText(path,
+                    $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]\n{content}\n\n");
+            }
+            catch { }
         }
 
         private static Icon GetIcon()
