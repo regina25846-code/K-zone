@@ -5,7 +5,7 @@ using KrisZone.Models;
 
 namespace KrisZone
 {
-    internal class MonitorInfo
+    public class MonitorInfo
     {
         public IntPtr Handle { get; set; }
         public string Id { get; set; } = "";
@@ -14,7 +14,7 @@ namespace KrisZone
         public double ScaleFactor { get; set; } = 1.0;
     }
 
-    internal static class MonitorManager
+    public static class MonitorManager
     {
         public static List<MonitorInfo> Monitors { get; private set; } = new();
 
