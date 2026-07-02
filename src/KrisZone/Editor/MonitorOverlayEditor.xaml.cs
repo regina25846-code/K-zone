@@ -63,6 +63,24 @@ namespace KrisZone.Editor
             {
                 _shiftDown = true;
                 RefreshSplitterHints();
+                return;
+            }
+            if (e.Key == Key.S && _activeZone >= 0 && _data != null)
+            {
+                // 파워토이즈: S = 수평 절반 분할, Shift+S = 수직 절반 분할
+                var orientation = _shiftDown ? Orientation.Vertical : Orientation.Horizontal;
+                var zone = _data.Zones[_activeZone];
+                int position = orientation == Orientation.Vertical
+                    ? (zone.Left + zone.Right) / 2
+                    : (zone.Top + zone.Bottom) / 2;
+                if (_data.CanSplit(_activeZone, position, orientation))
+                {
+                    PushUndo();
+                    _data.Split(_activeZone, position, orientation);
+                    SaveCurrentZones();
+                    SetupUI();
+                }
+                e.Handled = true;
             }
         }
 

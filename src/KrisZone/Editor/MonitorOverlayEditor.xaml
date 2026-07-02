@@ -103,7 +103,7 @@
                 </Button>
 
                 <TextBlock Grid.Column="8"
-                           Text="클릭: 분할  |  Shift+클릭: 가로분할  |  드래그: 존 선택 합치기  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
+                           Text="클릭: 분할  |  S: 절반분할  |  Shift+S: 세로절반  |  드래그: 존 선택→합치기  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
                            Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="10" Content="이 모니터에 적용"
