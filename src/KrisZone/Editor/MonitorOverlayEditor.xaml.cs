@@ -220,7 +220,11 @@ namespace KrisZone.Editor
                 double y = zone.Top    / (double)GridData.Multiplier * ph;
                 double w = (zone.Right  - zone.Left)   / (double)GridData.Multiplier * pw;
                 double h = (zone.Bottom - zone.Top)    / (double)GridData.Multiplier * ph;
-                const double gap = 3;
+                const double gap = 1;
+
+                // 실제 픽셀 크기 계산
+                int pixelW = (int)(w / pw * _monitor.WorkArea.Width);
+                int pixelH = (int)(h / ph * _monitor.WorkArea.Height);
 
                 var border = new Border
                 {
@@ -228,21 +232,34 @@ namespace KrisZone.Editor
                     Height = Math.Max(1, h - gap * 2),
                     Background = new SolidColorBrush(Color.FromArgb(90, 0x3B, 0x82, 0xF6)),
                     BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0x60, 0xA5, 0xFA)),
-                    BorderThickness = new Thickness(2),
-                    CornerRadius = new CornerRadius(6),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(3),
                     Cursor = Cursors.Hand,
                     Focusable = true,
                 };
 
-                var label = new TextBlock
+                var labelPanel = new StackPanel
                 {
-                    Text = (zi + 1).ToString(),
-                    Foreground = Brushes.White,
-                    FontSize = 28, FontWeight = FontWeights.Bold, Opacity = 0.6,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     IsHitTestVisible = false,
                 };
+                var label = new TextBlock
+                {
+                    Text = (zi + 1).ToString(),
+                    Foreground = Brushes.White,
+                    FontSize = 36, FontWeight = FontWeights.Bold, Opacity = 0.8,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                };
+                var pixelLabel = new TextBlock
+                {
+                    Text = $"{pixelW} × {pixelH}",
+                    Foreground = Brushes.White,
+                    FontSize = 13, Opacity = 0.7,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                };
+                labelPanel.Children.Add(label);
+                labelPanel.Children.Add(pixelLabel);
 
                 // 존 내부에 분할선 미리보기용 Rectangle 2개 (수평/수직)
                 var splitterH = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0, 0x60, 0xA5, 0xFA)), IsHitTestVisible = false };
@@ -250,7 +267,7 @@ namespace KrisZone.Editor
                 _splitters.Add((splitterH, splitterV));
 
                 var grid = new Grid();
-                grid.Children.Add(label);
+                grid.Children.Add(labelPanel);
                 grid.Children.Add(splitterH);
                 grid.Children.Add(splitterV);
                 border.Child = grid;

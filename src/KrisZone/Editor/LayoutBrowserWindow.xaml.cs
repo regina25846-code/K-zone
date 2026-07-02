@@ -50,12 +50,22 @@ namespace KrisZone.Editor
 
         private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected)
         {
+            // 실제 모니터 비율에 맞게 탭 너비 계산 (16:9 기준 120px)
+            const double baseWidth = 120;
+            const double baseAspect = 16.0 / 9.0;
+            double aspect = (double)monitor.WorkArea.Width / monitor.WorkArea.Height;
+            double tabWidth = Math.Clamp(baseWidth * aspect / baseAspect, 80, 280);
+
+            var blue = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            var dark = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
+            var gray = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
+
             var border = new Border
             {
-                MinWidth = 110, Padding = new Thickness(14, 10, 14, 10),
+                Width = tabWidth, Padding = new Thickness(10, 10, 10, 10),
                 Background = Brushes.White,
                 BorderBrush = selected
-                    ? new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6))
+                    ? blue
                     : new SolidColorBrush(Color.FromRgb(0xE5, 0xE7, 0xEB)),
                 BorderThickness = new Thickness(selected ? 2 : 1),
                 CornerRadius = new CornerRadius(6),
@@ -63,25 +73,23 @@ namespace KrisZone.Editor
                 Cursor = Cursors.Hand,
             };
 
-            var blue = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
-            var dark = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
-            var gray = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
-
             var sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
             sp.Children.Add(new TextBlock
             {
-                Text = idx.ToString(), FontSize = 28, FontWeight = FontWeights.Bold,
+                Text = idx.ToString(), FontSize = 32, FontWeight = FontWeights.Bold,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Foreground = selected ? blue : dark,
             });
             sp.Children.Add(new TextBlock
             {
                 Text = $"{monitor.WorkArea.Width} × {monitor.WorkArea.Height}",
-                FontSize = 11, Foreground = gray, HorizontalAlignment = HorizontalAlignment.Center,
+                FontSize = 12, Foreground = gray,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
             });
             sp.Children.Add(new TextBlock
             {
-                Text = "100%", FontSize = 11,
+                Text = "100%", FontSize = 12,
                 Foreground = selected ? blue : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
@@ -95,9 +103,9 @@ namespace KrisZone.Editor
             if (index >= monitors.Count) return;
             _selectedMonitor = monitors[index];
 
-            var blue = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
-            var dark = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
-            var gray = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
+            var blue     = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            var dark     = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
+            var gray     = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
             var lineGray = new SolidColorBrush(Color.FromRgb(0xE5, 0xE7, 0xEB));
 
             for (int i = 0; i < _monitorTabs.Count; i++)
@@ -145,9 +153,9 @@ namespace KrisZone.Editor
 
         private static TextBlock SectionHeader(string text, double topMargin = 0) => new TextBlock
         {
-            Text = text, FontSize = 18, FontWeight = FontWeights.SemiBold,
+            Text = text, FontSize = 22, FontWeight = FontWeights.Bold,
             Foreground = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27)),
-            Margin = new Thickness(0, topMargin, 0, 14),
+            Margin = new Thickness(0, topMargin, 0, 16),
         };
 
         private static WrapPanel CardWrapPanel() => new WrapPanel
@@ -164,7 +172,7 @@ namespace KrisZone.Editor
 
             var card = new Border
             {
-                Width = 195, Height = 170,
+                Width = 210, Height = 175,
                 Background = selected
                     ? new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF))
                     : Brushes.White,
@@ -186,7 +194,7 @@ namespace KrisZone.Editor
 
             var nameText = new TextBlock
             {
-                Text = layout.Name, FontSize = 13, FontWeight = FontWeights.SemiBold,
+                Text = layout.Name, FontSize = 14, FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27)),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -196,7 +204,7 @@ namespace KrisZone.Editor
             {
                 Content = "✏", Cursor = Cursors.Hand,
                 Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                FontSize = 13, Foreground = new SolidColorBrush(Color.FromRgb(0x9C, 0xA3, 0xAF)),
+                FontSize = 14, Foreground = new SolidColorBrush(Color.FromRgb(0x9C, 0xA3, 0xAF)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(4, 0, 0, 0),
                 ToolTip = "레이아웃 편집",
