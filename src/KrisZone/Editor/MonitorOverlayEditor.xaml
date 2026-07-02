@@ -45,8 +45,7 @@
         <Border x:Name="IntroPanel"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 Background="#F0111827" CornerRadius="12"
-                Padding="28,24" MinWidth="420" MaxWidth="500"
-                Effect="{x:Null}">
+                Padding="28,24" MinWidth="420" MaxWidth="500">
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="30" ShadowDepth="0" Opacity="0.6"/>
             </Border.Effect>
