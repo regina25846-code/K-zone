@@ -98,5 +98,19 @@ namespace KrisZone
         public const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
         public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
         public const int SW_RESTORE = 9;
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct DISPLAY_DEVICE
+        {
+            public uint cb;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]  public string DeviceName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
+            public uint StateFlags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
     }
 }

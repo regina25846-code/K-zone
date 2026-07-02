@@ -29,7 +29,7 @@ namespace KrisZone
             BuildTray();
 
             if (SettingsManager.IsFirstRun)
-                OpenEditor();
+                OpenOverlayEditor(MonitorManager.Monitors.Count > 0 ? MonitorManager.Monitors[0] : null);
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -43,7 +43,23 @@ namespace KrisZone
         private void BuildTray()
         {
             var menu = new ContextMenuStrip();
-            menu.Items.Add("편집기 열기", null, (_, _) => OpenEditor());
+
+            // One entry per monitor
+            if (MonitorManager.Monitors.Count == 1)
+            {
+                menu.Items.Add("레이아웃 편집", null, (_, _) => OpenOverlayEditor(MonitorManager.Monitors[0]));
+            }
+            else
+            {
+                foreach (var m in MonitorManager.Monitors)
+                {
+                    var mon = m;
+                    menu.Items.Add(mon.DisplayName + " 편집", null, (_, _) => OpenOverlayEditor(mon));
+                }
+            }
+
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("설정", null, (_, _) => OpenSettings());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("종료", null, (_, _) => { Current.Shutdown(); });
 
@@ -54,14 +70,30 @@ namespace KrisZone
                 Visible = true,
                 ContextMenuStrip = menu
             };
-            _trayIcon.DoubleClick += (_, _) => OpenEditor();
+            // Double-click: open editor for monitor under cursor
+            _trayIcon.DoubleClick += (_, _) =>
+            {
+                var m = MonitorManager.Monitors.Count > 0 ? MonitorManager.Monitors[0] : null;
+                OpenOverlayEditor(m);
+            };
         }
 
-        private void OpenEditor()
+        private void OpenOverlayEditor(MonitorInfo? monitor)
+        {
+            if (monitor == null) return;
+            Dispatcher.Invoke(() =>
+            {
+                var w = new MonitorOverlayEditor(monitor);
+                w.Show();
+                w.Activate();
+            });
+        }
+
+        private void OpenSettings()
         {
             Dispatcher.Invoke(() =>
             {
-                var w = new EditorWindow();
+                var w = new SettingsWindow();
                 w.Show();
                 w.Activate();
             });
@@ -69,7 +101,6 @@ namespace KrisZone
 
         private static Icon GetIcon()
         {
-            // Embedded icon fallback: create simple icon from resources
             try
             {
                 var uri = new Uri("pack://application:,,,/Resources/icon.ico");

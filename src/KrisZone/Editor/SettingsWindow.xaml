@@ -1,0 +1,49 @@
+<Window x:Class="KrisZone.Editor.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KrisZone 설정" Width="340" Height="560"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E2E" Foreground="White"
+        ResizeMode="NoResize">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20,20,20,20">
+            <TextBlock Text="존 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>
+            <TextBox x:Name="ZoneColorBox" Background="#2A2A3E" Foreground="White"
+                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                     TextChanged="ZoneColor_Changed"/>
+
+            <TextBlock Text="하이라이트 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
+            <TextBox x:Name="HighlightColorBox" Background="#2A2A3E" Foreground="White"
+                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                     TextChanged="ZoneColor_Changed"/>
+
+            <TextBlock Text="불투명도 (0~100)" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
+            <Slider x:Name="OpacitySlider" Minimum="0" Maximum="100" Value="50"
+                    Foreground="#3B82F6" ValueChanged="Opacity_Changed"/>
+            <TextBlock x:Name="OpacityLabel" Text="50%" FontSize="11" Foreground="#6B7280" Margin="0,2,0,0"/>
+
+            <Separator Background="#2A2A4E" Margin="0,18,0,18"/>
+
+            <TextBlock Text="동작 설정" FontSize="13" FontWeight="SemiBold" Foreground="#9CA3AF" Margin="0,0,0,12"/>
+
+            <CheckBox x:Name="ShiftDragCheck" Content="Shift+드래그로 존 활성화" Foreground="White"
+                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+            <CheckBox x:Name="TransparentCheck" Content="드래그 중 창 투명화" Foreground="White"
+                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+            <CheckBox x:Name="ShowNumberCheck" Content="존 번호 표시" Foreground="White"
+                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+            <CheckBox x:Name="OverrideSnapCheck" Content="Win+방향키 오버라이드" Foreground="White"
+                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+            <CheckBox x:Name="AppLastZoneCheck" Content="앱별 마지막 존 기억" Foreground="White"
+                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+
+            <Separator Background="#2A2A4E" Margin="0,18,0,18"/>
+
+            <TextBlock Text="제외 앱 (줄바꿈으로 구분)" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>
+            <TextBox x:Name="ExcludedAppsBox" Background="#2A2A3E" Foreground="White"
+                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                     AcceptsReturn="True" Height="100" VerticalScrollBarVisibility="Auto"
+                     TextChanged="ExcludedApps_Changed"/>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

@@ -38,7 +38,10 @@ namespace KrisZone
                 int physW = r.Right - r.Left;
                 int physH = r.Bottom - r.Top;
                 int idx = Monitors.Count + 1;
-                string displayName = $"모니터 {idx}  ({physW}×{physH})";
+                string modelName = GetMonitorModel(mi.szDevice);
+                string displayName = string.IsNullOrEmpty(modelName)
+                    ? $"모니터 {idx}  ({physW}×{physH})"
+                    : $"모니터 {idx}  {modelName}  ({physW}×{physH})";
 
                 Monitors.Add(new MonitorInfo
                 {
@@ -64,6 +67,18 @@ namespace KrisZone
         {
             var hMon = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
             return Monitors.Find(m => m.Handle == hMon);
+        }
+
+        private static string GetMonitorModel(string deviceName)
+        {
+            try
+            {
+                var dd = new NativeMethods.DISPLAY_DEVICE { cb = (uint)Marshal.SizeOf<NativeMethods.DISPLAY_DEVICE>() };
+                if (NativeMethods.EnumDisplayDevices(deviceName, 0, ref dd, 0))
+                    return dd.DeviceString.Trim();
+            }
+            catch { }
+            return "";
         }
 
         [DllImport("Shcore.dll")] private static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);

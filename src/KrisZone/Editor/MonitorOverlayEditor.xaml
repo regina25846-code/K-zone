@@ -1,0 +1,115 @@
+<Window x:Class="KrisZone.Editor.MonitorOverlayEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="#B2000010"
+        Topmost="True"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual">
+
+    <Grid>
+        <!-- Zone Canvas (full monitor) -->
+        <Canvas x:Name="ZoneCanvas"
+                Background="Transparent"
+                MouseLeftButtonDown="Canvas_MouseDown"
+                MouseMove="Canvas_MouseMove"
+                MouseLeftButtonUp="Canvas_MouseUp"
+                MouseRightButtonDown="Canvas_RightClick"/>
+
+        <!-- Top HUD Bar -->
+        <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
+                Background="#E6111122" CornerRadius="0,0,10,10" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Monitor label -->
+                <TextBlock Grid.Column="0" x:Name="MonitorLabel"
+                           Foreground="#9CA3AF" FontSize="13" VerticalAlignment="Center"/>
+
+                <!-- Layout combo -->
+                <ComboBox Grid.Column="2" x:Name="LayoutCombo"
+                          Width="160" Background="#2A2A3E" Foreground="White"
+                          BorderBrush="#3A3A5E" FontSize="13"
+                          SelectionChanged="LayoutCombo_SelectionChanged"/>
+
+                <!-- Layout name box -->
+                <TextBox Grid.Column="4" x:Name="LayoutNameBox"
+                         Background="#2A2A3E" Foreground="White"
+                         BorderBrush="#3A3A5E" Padding="8,5" FontSize="13"
+                         TextChanged="LayoutNameBox_TextChanged"/>
+
+                <!-- Add layout -->
+                <Button Grid.Column="6" Content="＋ 새 레이아웃"
+                        Click="AddLayout_Click"
+                        Foreground="White" Background="#3B82F6" BorderThickness="0"
+                        Padding="10,5" FontSize="12" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- Hint -->
+                <TextBlock Grid.Column="8"
+                           Text="드래그: 존 생성  |  우클릭: 삭제  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
+                           Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
+
+                <!-- Apply button -->
+                <Button Grid.Column="10" Content="이 모니터에 적용"
+                        Click="Apply_Click"
+                        Foreground="White" Background="#10B981" BorderThickness="0"
+                        Padding="12,6" FontSize="13" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#059669"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- Close button -->
+                <Button Grid.Column="12" Content="✕"
+                        Click="Close_Click"
+                        Foreground="White" Background="#EF4444" BorderThickness="0"
+                        Width="32" Height="32" FontSize="14" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="16" Padding="0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#DC2626"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
