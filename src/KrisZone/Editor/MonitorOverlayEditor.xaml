@@ -88,22 +88,13 @@
                     <Button Grid.Column="0" Content="저장" Click="IntroSave_Click" Cursor="Hand">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#3B82F6" CornerRadius="7" Padding="0,10">
+                                <Border x:Name="Bd" Background="#3B82F6" CornerRadius="7" Padding="0,10">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                                       TextElement.Foreground="White" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="#2563EB" CornerRadius="7" Padding="0,10">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                          TextElement.Foreground="White" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter TargetName="Bd" Property="Background" Value="#2563EB"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -112,22 +103,13 @@
                     <Button Grid.Column="2" Content="취소" Click="IntroCancel_Click" Cursor="Hand">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#374151" CornerRadius="7" Padding="0,10">
+                                <Border x:Name="Bd" Background="#374151" CornerRadius="7" Padding="0,10">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                                       TextElement.Foreground="White" TextElement.FontSize="13"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="#4B5563" CornerRadius="7" Padding="0,10">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                          TextElement.Foreground="White" TextElement.FontSize="13"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter TargetName="Bd" Property="Background" Value="#4B5563"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
