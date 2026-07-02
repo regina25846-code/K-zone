@@ -9,13 +9,38 @@
         WindowStartupLocation="Manual">
 
     <Grid>
-        <!-- Zone Canvas (full monitor) -->
-        <Canvas x:Name="ZoneCanvas"
-                Background="Transparent"
-                MouseLeftButtonDown="Canvas_MouseDown"
-                MouseMove="Canvas_MouseMove"
-                MouseLeftButtonUp="Canvas_MouseUp"
-                MouseRightButtonDown="Canvas_RightClick"/>
+        <!-- Zone Preview Canvas -->
+        <Canvas x:Name="Preview" Background="Transparent"/>
+
+        <!-- Resizer (divider line) Adorner Layer -->
+        <Canvas x:Name="AdornerLayer" Background="Transparent" IsHitTestVisible="True"/>
+
+        <!-- Merge selection panel -->
+        <Canvas x:Name="MergePanel" Background="Transparent" Visibility="Collapsed">
+            <StackPanel x:Name="MergeButtons" Orientation="Horizontal"
+                        Background="#DD111122" HorizontalAlignment="Left">
+                <StackPanel.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="14,7"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </StackPanel.Resources>
+                <Button Content="합치기" Background="#3B82F6" Click="MergeClick" Margin="0,0,4,0"/>
+                <Button Content="취소" Background="#6B7280" Click="MergeCancelClick"/>
+            </StackPanel>
+        </Canvas>
 
         <!-- Top HUD Bar -->
         <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
@@ -37,23 +62,19 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Monitor label -->
                 <TextBlock Grid.Column="0" x:Name="MonitorLabel"
                            Foreground="#9CA3AF" FontSize="13" VerticalAlignment="Center"/>
 
-                <!-- Layout combo -->
                 <ComboBox Grid.Column="2" x:Name="LayoutCombo"
                           Width="160" Background="#2A2A3E" Foreground="White"
                           BorderBrush="#3A3A5E" FontSize="13"
                           SelectionChanged="LayoutCombo_SelectionChanged"/>
 
-                <!-- Layout name box -->
                 <TextBox Grid.Column="4" x:Name="LayoutNameBox"
                          Background="#2A2A3E" Foreground="White"
                          BorderBrush="#3A3A5E" Padding="8,5" FontSize="13"
                          TextChanged="LayoutNameBox_TextChanged"/>
 
-                <!-- Add layout -->
                 <Button Grid.Column="6" Content="＋ 새 레이아웃"
                         Click="AddLayout_Click"
                         Foreground="White" Background="#3B82F6" BorderThickness="0"
@@ -67,12 +88,10 @@
                     </Button.Template>
                 </Button>
 
-                <!-- Hint -->
                 <TextBlock Grid.Column="8"
-                           Text="드래그: 존 생성  |  우클릭: 삭제  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
+                           Text="클릭: 분할  |  Shift+클릭: 가로분할  |  드래그: 존 선택 합치기  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
                            Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
 
-                <!-- Apply button -->
                 <Button Grid.Column="10" Content="이 모니터에 적용"
                         Click="Apply_Click"
                         Foreground="White" Background="#10B981" BorderThickness="0"
@@ -91,7 +110,6 @@
                     </Button.Template>
                 </Button>
 
-                <!-- Close button -->
                 <Button Grid.Column="12" Content="✕"
                         Click="Close_Click"
                         Foreground="White" Background="#EF4444" BorderThickness="0"

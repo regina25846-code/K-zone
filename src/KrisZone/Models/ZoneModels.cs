@@ -18,13 +18,49 @@ namespace KrisZone.Models
         public ZoneRect(double x, double y, double w, double h) { X = x; Y = y; Width = w; Height = h; }
     }
 
+    // Grid 레이아웃 메타데이터 (파워토이즈 방식)
+    public class GridMeta
+    {
+        public int Rows { get; set; } = 1;
+        public int Columns { get; set; } = 1;
+        public List<int> RowPercents { get; set; } = new();
+        public List<int> ColumnPercents { get; set; } = new();
+        public List<int> CellChildMap { get; set; } = new(); // flat row-major
+
+        public int[,] GetCellChildMap2D()
+        {
+            var map = new int[Rows, Columns];
+            for (int r = 0; r < Rows; r++)
+                for (int c = 0; c < Columns; c++)
+                    map[r, c] = (r * Columns + c < CellChildMap.Count) ? CellChildMap[r * Columns + c] : 0;
+            return map;
+        }
+
+        public void SetCellChildMap2D(int[,] map)
+        {
+            CellChildMap = new List<int>(Rows * Columns);
+            for (int r = 0; r < Rows; r++)
+                for (int c = 0; c < Columns; c++)
+                    CellChildMap.Add(map[r, c]);
+        }
+
+        public static GridMeta Default1x1() => new GridMeta
+        {
+            Rows = 1, Columns = 1,
+            RowPercents = new List<int> { 10000 },
+            ColumnPercents = new List<int> { 10000 },
+            CellChildMap = new List<int> { 0 }
+        };
+    }
+
     public class ZoneLayout
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = "새 레이아웃";
-        public LayoutType Type { get; set; } = LayoutType.Canvas;
+        public LayoutType Type { get; set; } = LayoutType.Grid;
         public List<ZoneRect> Zones { get; set; } = new();
         public int SensitivityRadius { get; set; } = 20;
+        public GridMeta? Grid { get; set; } = GridMeta.Default1x1();
     }
 
     public class MonitorConfig
