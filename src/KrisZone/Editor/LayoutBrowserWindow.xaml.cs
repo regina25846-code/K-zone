@@ -39,7 +39,8 @@ namespace KrisZone.Editor
         private void BuildMonitorTabs(int selectedIndex = 0)
         {
             MonitorPanel.Children.Clear();
-            var monitors = MonitorManager.Monitors;
+            // X 좌표 기준 왼쪽→오른쪽 정렬 (파워토이즈 방식)
+            var monitors = MonitorManager.Monitors.OrderBy(m => m.Bounds.X).ToList();
             _selectedMonitor = monitors.Count > selectedIndex ? monitors[selectedIndex] : null;
 
             for (int i = 0; i < monitors.Count; i++)
@@ -61,50 +62,34 @@ namespace KrisZone.Editor
             double monW = monitor.Bounds.Width;
             double monH = monitor.Bounds.Height;
 
-            // 미니 직사각형 크기: 최대 110×70 영역 안에서 비율 유지
-            const double maxRW = 110, maxRH = 70;
-            double scale = Math.Min(maxRW / monW, maxRH / monH);
-            double rW = Math.Max(20, monW * scale);
-            double rH = Math.Max(20, monH * scale);
+            // 탭 너비: 16:9 기준 160px, 비율에 맞게 (탭 자체가 모니터 비율)
+            const double baseWidth = 160;
+            const double baseAspect = 16.0 / 9.0;
+            double aspect = monW / monH;
+            double tabWidth = Math.Clamp(baseWidth * aspect / baseAspect, 60, 380);
 
             var accent   = new SolidColorBrush(AccentColor);
             var dark     = new SolidColorBrush(DarkColor);
             var gray     = new SolidColorBrush(GrayColor);
             var lineGray = new SolidColorBrush(LineGray);
 
-            // 미니 직사각형 (모니터 모양)
-            var miniRect = new Border
-            {
-                Width  = rW, Height = rH,
-                Background = selected
-                    ? new SolidColorBrush(AccentBg)
-                    : new SolidColorBrush(Color.FromRgb(0xF3, 0xF4, 0xF6)),
-                BorderBrush = selected ? accent : lineGray,
-                BorderThickness = new Thickness(1.5),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Child = new TextBlock
-                {
-                    Text = idx.ToString(),
-                    FontSize = Math.Clamp(Math.Min(rW, rH) * 0.45, 12, 26),
-                    FontWeight = FontWeights.Bold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment   = VerticalAlignment.Center,
-                    Foreground = selected ? accent : dark,
-                },
-            };
-
             var sp = new StackPanel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(14, 10, 14, 10),
+                VerticalAlignment   = VerticalAlignment.Center,
             };
-            sp.Children.Add(miniRect);
+            sp.Children.Add(new TextBlock
+            {
+                Text = idx.ToString(), FontSize = 30, FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Foreground = selected ? accent : dark,
+            });
             sp.Children.Add(new TextBlock
             {
                 Text = $"{(int)monW} × {(int)monH}",
                 FontSize = 11, Foreground = gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 5, 0, 0),
+                Margin = new Thickness(0, 2, 0, 0),
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
             sp.Children.Add(new TextBlock
@@ -116,7 +101,9 @@ namespace KrisZone.Editor
 
             return new Border
             {
-                Background = selected ? new SolidColorBrush(Color.FromRgb(0xF8, 0xFB, 0xFF)) : Brushes.White,
+                Width = tabWidth, MinHeight = 100,
+                Padding = new Thickness(10, 14, 10, 14),
+                Background = selected ? new SolidColorBrush(Color.FromRgb(0xF0, 0xF8, 0xFF)) : Brushes.White,
                 BorderBrush = selected ? accent : lineGray,
                 BorderThickness = new Thickness(selected ? 2 : 1),
                 CornerRadius = new CornerRadius(6),
