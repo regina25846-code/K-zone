@@ -14,7 +14,13 @@ namespace KrisZone.Editor
     public partial class LayoutBrowserWindow : Window
     {
         private MonitorInfo? _selectedMonitor;
-        private readonly List<Border> _monitorTabs = new();
+        private int _selectedMonitorIndex = 0;
+
+        private static readonly Color AccentColor  = Color.FromRgb(0x00, 0x78, 0xD4);
+        private static readonly Color DarkColor    = Color.FromRgb(0x11, 0x18, 0x27);
+        private static readonly Color GrayColor    = Color.FromRgb(0x6B, 0x72, 0x80);
+        private static readonly Color LineGray     = Color.FromRgb(0xE5, 0xE7, 0xEB);
+        private static readonly Color AccentBg     = Color.FromRgb(0xE5, 0xF2, 0xFB);
 
         public LayoutBrowserWindow()
         {
@@ -24,102 +30,100 @@ namespace KrisZone.Editor
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            BuildMonitorTabs();
+            BuildMonitorTabs(_selectedMonitorIndex);
             BuildLayoutCards();
         }
 
         // ── 모니터 탭 ─────────────────────────────────────────────────────────
 
-        private void BuildMonitorTabs()
+        private void BuildMonitorTabs(int selectedIndex = 0)
         {
             MonitorPanel.Children.Clear();
-            _monitorTabs.Clear();
-
             var monitors = MonitorManager.Monitors;
-            _selectedMonitor = monitors.Count > 0 ? monitors[0] : null;
+            _selectedMonitor = monitors.Count > selectedIndex ? monitors[selectedIndex] : null;
 
             for (int i = 0; i < monitors.Count; i++)
             {
                 int localI = i;
-                var tab = CreateMonitorTab(monitors[i], i + 1, i == 0);
-                _monitorTabs.Add(tab);
+                var tab = CreateMonitorTab(monitors[i], i + 1, i == selectedIndex);
                 MonitorPanel.Children.Add(tab);
-                tab.MouseLeftButtonDown += (_, _) => SelectMonitor(localI);
+                tab.MouseLeftButtonDown += (_, _) =>
+                {
+                    _selectedMonitorIndex = localI;
+                    BuildMonitorTabs(localI);
+                    BuildLayoutCards();
+                };
             }
         }
 
         private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected)
         {
-            // 실제 모니터 비율에 맞게 탭 너비 계산 (16:9 기준 120px)
-            const double baseWidth = 120;
-            const double baseAspect = 16.0 / 9.0;
-            double aspect = (double)monitor.WorkArea.Width / monitor.WorkArea.Height;
-            double tabWidth = Math.Clamp(baseWidth * aspect / baseAspect, 80, 280);
+            double monW = monitor.Bounds.Width;
+            double monH = monitor.Bounds.Height;
 
-            var blue = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
-            var dark = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
-            var gray = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
+            // 미니 직사각형 크기: 최대 110×70 영역 안에서 비율 유지
+            const double maxRW = 110, maxRH = 70;
+            double scale = Math.Min(maxRW / monW, maxRH / monH);
+            double rW = Math.Max(20, monW * scale);
+            double rH = Math.Max(20, monH * scale);
 
-            var border = new Border
+            var accent   = new SolidColorBrush(AccentColor);
+            var dark     = new SolidColorBrush(DarkColor);
+            var gray     = new SolidColorBrush(GrayColor);
+            var lineGray = new SolidColorBrush(LineGray);
+
+            // 미니 직사각형 (모니터 모양)
+            var miniRect = new Border
             {
-                Width = tabWidth, Padding = new Thickness(10, 10, 10, 10),
-                Background = Brushes.White,
-                BorderBrush = selected
-                    ? blue
-                    : new SolidColorBrush(Color.FromRgb(0xE5, 0xE7, 0xEB)),
-                BorderThickness = new Thickness(selected ? 2 : 1),
-                CornerRadius = new CornerRadius(6),
-                Margin = new Thickness(0, 0, 8, 0),
-                Cursor = Cursors.Hand,
+                Width  = rW, Height = rH,
+                Background = selected
+                    ? new SolidColorBrush(AccentBg)
+                    : new SolidColorBrush(Color.FromRgb(0xF3, 0xF4, 0xF6)),
+                BorderBrush = selected ? accent : lineGray,
+                BorderThickness = new Thickness(1.5),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = idx.ToString(),
+                    FontSize = Math.Clamp(Math.Min(rW, rH) * 0.45, 12, 26),
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment   = VerticalAlignment.Center,
+                    Foreground = selected ? accent : dark,
+                },
             };
 
-            var sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            var sp = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(14, 10, 14, 10),
+            };
+            sp.Children.Add(miniRect);
             sp.Children.Add(new TextBlock
             {
-                Text = idx.ToString(), FontSize = 32, FontWeight = FontWeights.Bold,
+                Text = $"{(int)monW} × {(int)monH}",
+                FontSize = 11, Foreground = gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Foreground = selected ? blue : dark,
-            });
-            sp.Children.Add(new TextBlock
-            {
-                Text = $"{monitor.WorkArea.Width} × {monitor.WorkArea.Height}",
-                FontSize = 12, Foreground = gray,
-                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 0),
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
             sp.Children.Add(new TextBlock
             {
-                Text = "100%", FontSize = 12,
-                Foreground = selected ? blue : gray,
+                Text = "100%", FontSize = 11,
+                Foreground = selected ? accent : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
-            border.Child = sp;
-            return border;
-        }
 
-        private void SelectMonitor(int index)
-        {
-            var monitors = MonitorManager.Monitors;
-            if (index >= monitors.Count) return;
-            _selectedMonitor = monitors[index];
-
-            var blue     = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
-            var dark     = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27));
-            var gray     = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80));
-            var lineGray = new SolidColorBrush(Color.FromRgb(0xE5, 0xE7, 0xEB));
-
-            for (int i = 0; i < _monitorTabs.Count; i++)
+            return new Border
             {
-                bool sel = i == index;
-                var tab = _monitorTabs[i];
-                tab.BorderBrush = sel ? blue : lineGray;
-                tab.BorderThickness = new Thickness(sel ? 2 : 1);
-                var sp = (StackPanel)tab.Child;
-                ((TextBlock)sp.Children[0]).Foreground = sel ? blue : dark;
-                ((TextBlock)sp.Children[2]).Foreground = sel ? blue : gray;
-            }
-
-            BuildLayoutCards();
+                Background = selected ? new SolidColorBrush(Color.FromRgb(0xF8, 0xFB, 0xFF)) : Brushes.White,
+                BorderBrush = selected ? accent : lineGray,
+                BorderThickness = new Thickness(selected ? 2 : 1),
+                CornerRadius = new CornerRadius(6),
+                Margin = new Thickness(0, 0, 8, 0),
+                Cursor = Cursors.Hand,
+                Child = sp,
+            };
         }
 
         // ── 레이아웃 카드 ─────────────────────────────────────────────────────
@@ -154,7 +158,7 @@ namespace KrisZone.Editor
         private static TextBlock SectionHeader(string text, double topMargin = 0) => new TextBlock
         {
             Text = text, FontSize = 22, FontWeight = FontWeights.Bold,
-            Foreground = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27)),
+            Foreground = new SolidColorBrush(DarkColor),
             Margin = new Thickness(0, topMargin, 0, 16),
         };
 
@@ -166,19 +170,19 @@ namespace KrisZone.Editor
 
         private Border CreateLayoutCard(ZoneLayout layout, bool selected)
         {
-            var blue    = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
-            var lineGray = new SolidColorBrush(Color.FromRgb(0xE5, 0xE7, 0xEB));
-            var hoverLine = new SolidColorBrush(Color.FromRgb(0xBF, 0xDB, 0xFE));
+            var accent    = new SolidColorBrush(AccentColor);
+            var lineGray  = new SolidColorBrush(LineGray);
+            var hoverLine = new SolidColorBrush(Color.FromRgb(0x93, 0xC5, 0xFD));
 
             var card = new Border
             {
-                Width = 210, Height = 175,
+                Width = 185, Height = 168,
                 Background = selected
-                    ? new SolidColorBrush(Color.FromRgb(0xEF, 0xF6, 0xFF))
+                    ? new SolidColorBrush(AccentBg)
                     : Brushes.White,
-                BorderBrush = selected ? blue : lineGray,
+                BorderBrush = selected ? accent : lineGray,
                 BorderThickness = new Thickness(selected ? 2 : 1),
-                CornerRadius = new CornerRadius(8),
+                CornerRadius = new CornerRadius(6),
                 Margin = new Thickness(0, 0, 12, 12),
                 Cursor = Cursors.Hand,
             };
@@ -187,15 +191,14 @@ namespace KrisZone.Editor
             outer.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             outer.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-            // 헤더: 이름 + 연필
             var header = new Grid { Margin = new Thickness(12, 12, 12, 0) };
             header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var nameText = new TextBlock
             {
-                Text = layout.Name, FontSize = 14, FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(0x11, 0x18, 0x27)),
+                Text = layout.Name, FontSize = 13, FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(DarkColor),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             };
@@ -204,7 +207,7 @@ namespace KrisZone.Editor
             {
                 Content = "✏", Cursor = Cursors.Hand,
                 Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                FontSize = 14, Foreground = new SolidColorBrush(Color.FromRgb(0x9C, 0xA3, 0xAF)),
+                FontSize = 13, Foreground = new SolidColorBrush(GrayColor),
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(4, 0, 0, 0),
                 ToolTip = "레이아웃 편집",
@@ -216,7 +219,6 @@ namespace KrisZone.Editor
             header.Children.Add(editBtn);
             Grid.SetRow(header, 0);
 
-            // 미리보기
             var preview = CreatePreviewElement(layout);
             Grid.SetRow(preview, 1);
 
@@ -224,7 +226,6 @@ namespace KrisZone.Editor
             outer.Children.Add(preview);
             card.Child = outer;
 
-            // 이벤트
             var layoutRef = layout;
             editBtn.Click += (s, e) => { e.Handled = true; OpenEditorForLayout(layoutRef); };
             card.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) ApplyLayout(layoutRef); };
@@ -243,7 +244,7 @@ namespace KrisZone.Editor
             {
                 Margin = new Thickness(12, 8, 12, 12),
                 Background = new SolidColorBrush(Color.FromRgb(0xF3, 0xF4, 0xF6)),
-                CornerRadius = new CornerRadius(4),
+                CornerRadius = new CornerRadius(3),
             };
             var canvas = new Canvas();
             bg.Child = canvas;
@@ -278,7 +279,7 @@ namespace KrisZone.Editor
         {
             if (_selectedMonitor == null) return;
             ZoneManager.AssignLayout(_selectedMonitor, layout.Id);
-            BuildLayoutCards();
+            Close();
         }
 
         private void OpenEditorForLayout(ZoneLayout layout)

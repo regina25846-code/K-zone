@@ -220,7 +220,7 @@ namespace KrisZone.Editor
                 double y = zone.Top    / (double)GridData.Multiplier * ph;
                 double w = (zone.Right  - zone.Left)   / (double)GridData.Multiplier * pw;
                 double h = (zone.Bottom - zone.Top)    / (double)GridData.Multiplier * ph;
-                const double gap = 1;
+                const double gap = 0;
 
                 // 실제 픽셀 크기 계산
                 int pixelW = (int)(w / pw * _monitor.WorkArea.Width);
