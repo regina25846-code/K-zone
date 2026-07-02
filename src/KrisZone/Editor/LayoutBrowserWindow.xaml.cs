@@ -22,6 +22,9 @@ namespace KrisZone.Editor
         private static readonly Color LineGray     = Color.FromRgb(0xE5, 0xE7, 0xEB);
         private static readonly Color AccentBg     = Color.FromRgb(0xE5, 0xF2, 0xFB);
 
+        private const string FontBold   = "KoPubWorld Dotum";
+        private const string FontMedium = "KoPubWorld Dotum";
+
         public LayoutBrowserWindow()
         {
             InitializeComponent();
@@ -80,21 +83,24 @@ namespace KrisZone.Editor
             };
             sp.Children.Add(new TextBlock
             {
-                Text = idx.ToString(), FontSize = 30, FontWeight = FontWeights.Bold,
+                Text = idx.ToString(), FontSize = 32, FontWeight = FontWeights.Bold,
+                FontFamily = new FontFamily(FontBold),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Foreground = selected ? accent : dark,
             });
             sp.Children.Add(new TextBlock
             {
                 Text = $"{(int)monW} × {(int)monH}",
-                FontSize = 11, Foreground = gray,
+                FontSize = 13, FontFamily = new FontFamily(FontMedium),
+                Foreground = gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 2, 0, 0),
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
             sp.Children.Add(new TextBlock
             {
-                Text = "100%", FontSize = 11,
+                Text = "100%", FontSize = 13,
+                FontFamily = new FontFamily(FontMedium),
                 Foreground = selected ? accent : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
@@ -144,7 +150,8 @@ namespace KrisZone.Editor
 
         private static TextBlock SectionHeader(string text, double topMargin = 0) => new TextBlock
         {
-            Text = text, FontSize = 22, FontWeight = FontWeights.Bold,
+            Text = text, FontSize = 24, FontWeight = FontWeights.Bold,
+            FontFamily = new FontFamily(FontBold),
             Foreground = new SolidColorBrush(DarkColor),
             Margin = new Thickness(0, topMargin, 0, 16),
         };
@@ -163,7 +170,7 @@ namespace KrisZone.Editor
 
             var card = new Border
             {
-                Width = 185, Height = 168,
+                Width = 185, Height = 175,
                 Background = selected
                     ? new SolidColorBrush(AccentBg)
                     : Brushes.White,
@@ -184,7 +191,8 @@ namespace KrisZone.Editor
 
             var nameText = new TextBlock
             {
-                Text = layout.Name, FontSize = 13, FontWeight = FontWeights.SemiBold,
+                Text = layout.Name, FontSize = 15, FontWeight = FontWeights.SemiBold,
+                FontFamily = new FontFamily(FontMedium),
                 Foreground = new SolidColorBrush(DarkColor),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
@@ -194,7 +202,7 @@ namespace KrisZone.Editor
             {
                 Content = "✏", Cursor = Cursors.Hand,
                 Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                FontSize = 13, Foreground = new SolidColorBrush(GrayColor),
+                FontSize = 15, Foreground = new SolidColorBrush(GrayColor),
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(4, 0, 0, 0),
                 ToolTip = "레이아웃 편집",

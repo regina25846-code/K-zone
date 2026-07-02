@@ -43,9 +43,7 @@ namespace KrisZone
         private void BuildTray()
         {
             var menu = new ContextMenuStrip();
-            menu.Items.Add("K-FancyZones 편집기", null, (_, _) => OpenLayoutBrowser());
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("설정", null, (_, _) => OpenSettings());
+            menu.Items.Add("K-FancyZones 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("종료", null, (_, _) => { Current.Shutdown(); });
 
