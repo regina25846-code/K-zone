@@ -70,14 +70,24 @@ namespace KrisZone
             if (IsExcluded(hwnd)) return;
             _draggingHwnd = hwnd;
             _highlighted = new List<int>();
+            // 투명화는 Shift 누를 때 OnLocationChange에서 처리
+        }
 
-            if (SettingsManager.Current.MakeDraggedWindowTransparent)
-            {
-                int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, style | NativeMethods.WS_EX_LAYERED);
-                NativeMethods.SetLayeredWindowAttributes(hwnd, 0, 180, NativeMethods.LWA_ALPHA);
-                _draggingWindowTransparent = true;
-            }
+        private void ApplyTransparency(IntPtr hwnd)
+        {
+            if (_draggingWindowTransparent) return;
+            int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+            NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, style | NativeMethods.WS_EX_LAYERED);
+            NativeMethods.SetLayeredWindowAttributes(hwnd, 0, 180, NativeMethods.LWA_ALPHA);
+            _draggingWindowTransparent = true;
+        }
+
+        private void RemoveTransparency(IntPtr hwnd)
+        {
+            if (!_draggingWindowTransparent) return;
+            int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+            NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, style & ~NativeMethods.WS_EX_LAYERED);
+            _draggingWindowTransparent = false;
         }
 
         private void OnLocationChange()
@@ -90,9 +100,15 @@ namespace KrisZone
 
             if (!shouldShow)
             {
+                // Shift 없으면 투명화 해제 + 오버레이 숨김
+                RemoveTransparency(_draggingHwnd);
                 HideOverlay();
                 return;
             }
+
+            // Shift 누른 순간 투명화 적용
+            if (s.MakeDraggedWindowTransparent)
+                ApplyTransparency(_draggingHwnd);
 
             NativeMethods.GetCursorPos(out var pt);
             var monitor = MonitorManager.GetMonitorFromPoint(pt.X, pt.Y);
@@ -146,13 +162,7 @@ namespace KrisZone
         {
             if (hwnd != _draggingHwnd) return;
 
-            // Restore transparency
-            if (_draggingWindowTransparent)
-            {
-                int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, style & ~NativeMethods.WS_EX_LAYERED);
-                _draggingWindowTransparent = false;
-            }
+            RemoveTransparency(hwnd);
 
             HideOverlay();
 
