@@ -12,13 +12,12 @@
         <!-- Zone Preview Canvas -->
         <Canvas x:Name="Preview" Background="Transparent"/>
 
-        <!-- Resizer (divider line) Adorner Layer -->
+        <!-- Resizer Adorner Layer -->
         <Canvas x:Name="AdornerLayer" Background="Transparent" IsHitTestVisible="True"/>
 
         <!-- Merge selection panel -->
         <Canvas x:Name="MergePanel" Background="Transparent" Visibility="Collapsed">
-            <StackPanel x:Name="MergeButtons" Orientation="Horizontal"
-                        Background="#DD111122" HorizontalAlignment="Left">
+            <StackPanel x:Name="MergeButtons" Orientation="Horizontal" Background="#DD111122">
                 <StackPanel.Resources>
                     <Style TargetType="Button">
                         <Setter Property="Foreground" Value="White"/>
@@ -42,9 +41,106 @@
             </StackPanel>
         </Canvas>
 
+        <!-- 파워토이즈 방식 인트로 팝업 (저장 전까지 유지) -->
+        <Border x:Name="IntroPanel"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#F0111827" CornerRadius="12"
+                Padding="28,24" MinWidth="420" MaxWidth="500"
+                Effect="{x:Null}">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="30" ShadowDepth="0" Opacity="0.6"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,16"
+                           Text="KrisZone 레이아웃 편집기"/>
+
+                <!-- 분할 안내 -->
+                <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8">
+                    <Run FontWeight="SemiBold" Foreground="White" Text="분할: "/>
+                    <Run Foreground="#9CA3AF" Text="존을 클릭하면 분할됩니다. Shift를 누른 채 클릭하면 방향이 바뀝니다."/>
+                </TextBlock>
+
+                <!-- 합치기 안내 -->
+                <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8">
+                    <Run FontWeight="SemiBold" Foreground="White" Text="합치기: "/>
+                    <Run Foreground="#9CA3AF" Text="존을 가로질러 드래그하면 여러 존을 선택해 합칠 수 있습니다."/>
+                </TextBlock>
+
+                <!-- 키보드 단축키 -->
+                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,6"
+                           Text="키보드 단축키:"/>
+                <TextBlock FontSize="12" Foreground="#9CA3AF" TextWrapping="Wrap" LineHeight="20">
+                    <Run Text="• S: 포커스된 존 절반 분할  |  Shift+S: 수직 절반 분할"/>
+                    <LineBreak/>
+                    <Run Text="• Delete: 포커스된 구분선 삭제 (인접 존 합치기)"/>
+                    <LineBreak/>
+                    <Run Text="• 방향키: 포커스된 구분선 이동"/>
+                    <LineBreak/>
+                    <Run Text="• Ctrl+Z: 되돌리기  |  Esc: 닫기"/>
+                </TextBlock>
+
+                <!-- 저장/취소 버튼 -->
+                <Grid Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="저장" Click="IntroSave_Click" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#3B82F6" CornerRadius="7" Padding="0,10">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      TextElement.Foreground="White" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="#2563EB" CornerRadius="7" Padding="0,10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                          TextElement.Foreground="White" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Grid.Column="2" Content="취소" Click="IntroCancel_Click" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#374151" CornerRadius="7" Padding="0,10">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      TextElement.Foreground="White" TextElement.FontSize="13"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="#4B5563" CornerRadius="7" Padding="0,10">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                          TextElement.Foreground="White" TextElement.FontSize="13"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- Top HUD Bar -->
         <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                Background="#E6111122" CornerRadius="0,0,10,10" Padding="14,10">
+                Background="#E6111122" CornerRadius="0,0,10,10" Padding="14,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -55,10 +151,6 @@
                     <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="8"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -102,35 +194,13 @@
                     </Button.Template>
                 </Button>
 
-                <TextBlock Grid.Column="8"
-                           Text="클릭: 분할  |  S: 절반분할  |  Shift+S: 세로절반  |  드래그: 존 선택→합치기  |  Ctrl+Z: 되돌리기  |  Esc: 닫기"
-                           Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
-
-                <Button Grid.Column="10" Content="이 모니터에 적용"
-                        Click="Apply_Click"
-                        Foreground="White" Background="#10B981" BorderThickness="0"
-                        Padding="12,6" FontSize="13" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#059669"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-
-                <Button Grid.Column="12" Content="✕"
+                <Button Grid.Column="8" Content="✕"
                         Click="Close_Click"
                         Foreground="White" Background="#EF4444" BorderThickness="0"
-                        Width="32" Height="32" FontSize="14" Cursor="Hand">
+                        Width="30" Height="30" FontSize="13" Cursor="Hand">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="16" Padding="0">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="15" Padding="0">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>

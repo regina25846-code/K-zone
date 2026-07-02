@@ -164,6 +164,14 @@ namespace KrisZone.Editor
             Close();
         }
 
+        private void IntroSave_Click(object sender, RoutedEventArgs e)
+        {
+            IntroPanel.Visibility = Visibility.Collapsed;
+            Apply_Click(sender, e);
+        }
+
+        private void IntroCancel_Click(object sender, RoutedEventArgs e) => Close();
+
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
         // ── Min zone sizes ────────────────────────────────────────────────────
@@ -267,11 +275,16 @@ namespace KrisZone.Editor
                     Cursor = resizer.Orientation == Orientation.Vertical ? Cursors.SizeWE : Cursors.SizeNS,
                     Opacity = 0.8,
                     Template = BuildThumbTemplate(resizer.Orientation),
+                    Focusable = true,
                 };
 
                 thumb.DragStarted   += (s, e) => OnResizerDragStarted(resizerIndexCopy);
                 thumb.DragDelta     += (s, e) => OnResizerDragDelta(resizerIndexCopy, e);
                 thumb.DragCompleted += (s, e) => OnResizerDragCompleted(resizerIndexCopy);
+                thumb.GotFocus      += (s, e) => ((Thumb)s).Opacity = 1.0;
+                thumb.LostFocus     += (s, e) => ((Thumb)s).Opacity = 0.8;
+                thumb.KeyDown       += (s, e) => OnResizerKeyDown(resizerIndexCopy, e);
+                thumb.MouseLeftButtonDown += (s, e) => { ((Thumb)s).Focus(); };
 
                 AdornerLayer.Children.Add(thumb);
                 PlaceResizer(ri);
@@ -692,6 +705,56 @@ namespace KrisZone.Editor
             UpdateMinZoneSizes();
             SaveCurrentZones();
             SetupUI();
+        }
+
+        // ── Resizer 키보드 지원 (파워토이즈: Delete = 합치기, 방향키 = 이동) ──
+
+        private void OnResizerKeyDown(int ri, KeyEventArgs e)
+        {
+            if (_data == null || _currentLayout?.Grid == null) return;
+
+            // Delete: 구분선 삭제 → 인접 존 합치기
+            if (e.Key == Key.Delete)
+            {
+                var res = _data.Resizers[ri];
+                var indices = new List<int>(res.PositiveSideIndices);
+                indices.AddRange(res.NegativeSideIndices);
+                PushUndo();
+                _data.DoMerge(indices);
+                SaveCurrentZones();
+                SetupUI();
+                e.Handled = true;
+                return;
+            }
+
+            // 방향키: 구분선 이동
+            double pw = Preview.ActualWidth  > 0 ? Preview.ActualWidth  : Width;
+            double ph = Preview.ActualHeight > 0 ? Preview.ActualHeight : Height;
+            var resizer = _data.Resizers[ri];
+
+            int step = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)
+                ? 1   // Ctrl+방향키: 1% 단위
+                : 5;  // 방향키: 5% 단위 (GridData.Multiplier 기준)
+
+            int delta = 0;
+            bool isVertical = resizer.Orientation == Orientation.Vertical;
+
+            if (isVertical  && e.Key == Key.Left)  delta = -step * 10;
+            if (isVertical  && e.Key == Key.Right) delta =  step * 10;
+            if (!isVertical && e.Key == Key.Up)    delta = -step * 10;
+            if (!isVertical && e.Key == Key.Down)  delta =  step * 10;
+
+            if (delta != 0 && _data.CanDrag(ri, delta))
+            {
+                PushUndo();
+                _data.Drag(ri, delta);
+                SaveCurrentZones();
+                SetupUI();
+                // 포커스를 같은 인덱스 Resizer로 유지
+                if (ri < AdornerLayer.Children.Count)
+                    ((Thumb)AdornerLayer.Children[Math.Min(ri, AdornerLayer.Children.Count - 1)]).Focus();
+                e.Handled = true;
+            }
         }
 
         // ── 저장 ─────────────────────────────────────────────────────────────
