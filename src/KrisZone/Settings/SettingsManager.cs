@@ -25,6 +25,7 @@ namespace KrisZone.Settings
                     var json = File.ReadAllText(ConfigPath);
                     Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
                     IsFirstRun = false;
+                    MigrateTemplates();
                 }
                 else
                 {
@@ -47,6 +48,25 @@ namespace KrisZone.Settings
             Directory.CreateDirectory(ConfigDir);
             var json = JsonSerializer.Serialize(Current, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(ConfigPath, json);
+        }
+
+        private static void MigrateTemplates()
+        {
+            // 구 템플릿 제거
+            var obsolete = new[] { "2열", "3열", "2행" };
+            Current.Layouts.RemoveAll(l => l.IsTemplate && obsolete.Contains(l.Name));
+
+            // 새 템플릿 없으면 추가
+            var newDefaults = new[] { Create49Inch(), Create27InchPivot(), Create16InchZeusLab() };
+            foreach (var l in newDefaults)
+            {
+                if (!Current.Layouts.Any(x => x.IsTemplate && x.Name == l.Name))
+                {
+                    l.IsTemplate = true;
+                    Current.Layouts.Add(l);
+                }
+            }
+            Save();
         }
 
         private static void InitDefaultLayouts()
