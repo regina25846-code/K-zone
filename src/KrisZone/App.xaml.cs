@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using KrisZone.Editor;
 using KrisZone.Settings;
 
@@ -35,6 +36,9 @@ namespace KrisZone
             _hotkeys = new HotkeyEngine();
             _hotkeys.Install();
 
+            if (SettingsManager.IsFirstRun)
+                SetAutoStart(true);
+
             BuildTray();
 
             if (SettingsManager.IsFirstRun)
@@ -49,10 +53,47 @@ namespace KrisZone
             base.OnExit(e);
         }
 
+        private static void SetAutoStart(bool enable)
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+                if (key == null) return;
+                if (enable)
+                    key.SetValue("K-FancyZones", $"\"{Environment.ProcessPath}\"");
+                else
+                    key.DeleteValue("K-FancyZones", throwOnMissingValue: false);
+            }
+            catch { }
+        }
+
+        private static bool IsAutoStartEnabled()
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Run");
+                return key?.GetValue("K-FancyZones") != null;
+            }
+            catch { return false; }
+        }
+
         private void BuildTray()
         {
+            var autoStartItem = new ToolStripMenuItem("시작 프로그램 등록")
+            {
+                Checked = IsAutoStartEnabled(),
+                CheckOnClick = true
+            };
+            autoStartItem.Click += (_, _) => SetAutoStart(autoStartItem.Checked);
+
             var menu = new ContextMenuStrip();
             menu.Items.Add("K-FancyZones 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(autoStartItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("프로그램 정보", null, (_, _) => OpenAboutWindow());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("종료", null, (_, _) => { Current.Shutdown(); });
 
@@ -64,6 +105,16 @@ namespace KrisZone
                 ContextMenuStrip = menu
             };
             _trayIcon.DoubleClick += (_, _) => OpenLayoutBrowser();
+        }
+
+        private void OpenAboutWindow()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var w = new AboutWindow();
+                w.Show();
+                w.Activate();
+            });
         }
 
         private void OpenLayoutBrowser()
