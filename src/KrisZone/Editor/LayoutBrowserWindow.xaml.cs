@@ -33,6 +33,12 @@ namespace KrisZone.Editor
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            // 가장 큰 모니터(면적 기준) 기본 선택
+            var monitors = MonitorManager.Monitors.OrderBy(m => m.Bounds.X).ToList();
+            _selectedMonitorIndex = monitors
+                .Select((m, i) => (area: m.Bounds.Width * m.Bounds.Height, idx: i))
+                .OrderByDescending(x => x.area)
+                .FirstOrDefault().idx;
             BuildMonitorTabs(_selectedMonitorIndex);
             BuildLayoutCards();
         }
@@ -42,14 +48,18 @@ namespace KrisZone.Editor
         private void BuildMonitorTabs(int selectedIndex = 0)
         {
             MonitorPanel.Children.Clear();
-            // X 좌표 기준 왼쪽→오른쪽 정렬 (파워토이즈 방식)
             var monitors = MonitorManager.Monitors.OrderBy(m => m.Bounds.X).ToList();
             _selectedMonitor = monitors.Count > selectedIndex ? monitors[selectedIndex] : null;
+
+            double maxArea = monitors.Count > 0
+                ? monitors.Max(m => m.Bounds.Width * m.Bounds.Height)
+                : 0;
 
             for (int i = 0; i < monitors.Count; i++)
             {
                 int localI = i;
-                var tab = CreateMonitorTab(monitors[i], i + 1, i == selectedIndex);
+                bool isLargest = monitors[i].Bounds.Width * monitors[i].Bounds.Height >= maxArea;
+                var tab = CreateMonitorTab(monitors[i], i + 1, i == selectedIndex, isLargest);
                 MonitorPanel.Children.Add(tab);
                 tab.MouseLeftButtonDown += (_, _) =>
                 {
@@ -60,7 +70,7 @@ namespace KrisZone.Editor
             }
         }
 
-        private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected)
+        private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected, bool isLargest = false)
         {
             double monW = monitor.Bounds.Width;
             double monH = monitor.Bounds.Height;
@@ -104,6 +114,22 @@ namespace KrisZone.Editor
                 Foreground = selected ? accent : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
+            if (isLargest)
+            {
+                sp.Children.Add(new Border
+                {
+                    Background = accent,
+                    CornerRadius = new CornerRadius(10),
+                    Padding = new Thickness(6, 2, 6, 2),
+                    Margin = new Thickness(0, 5, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = "가장 큼", FontSize = 10, FontWeight = FontWeights.SemiBold,
+                        Foreground = Brushes.White,
+                    },
+                });
+            }
 
             return new Border
             {
