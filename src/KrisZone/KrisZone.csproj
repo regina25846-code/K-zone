@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Resource Include="Resources\icon.ico" />
+    <Resource Include="Resources\tray_icon.png" />
   </ItemGroup>
 
 </Project>

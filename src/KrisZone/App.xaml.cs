@@ -58,7 +58,7 @@ namespace KrisZone
 
             _trayIcon = new NotifyIcon
             {
-                Icon = GetIcon(),
+                Icon = GetTrayIcon(),
                 Text = "K-FancyZones",
                 Visible = true,
                 ContextMenuStrip = menu
@@ -111,7 +111,20 @@ namespace KrisZone
             catch { }
         }
 
-        private static Icon GetIcon()
+        private static Icon GetTrayIcon()
+        {
+            try
+            {
+                var uri = new Uri("pack://application:,,,/Resources/tray_icon.png");
+                var stream = GetResourceStream(uri)?.Stream;
+                if (stream != null)
+                    return PngToIcon(stream, 32);
+            }
+            catch { }
+            return GetMainIcon();
+        }
+
+        private static Icon GetMainIcon()
         {
             try
             {
@@ -121,6 +134,21 @@ namespace KrisZone
             }
             catch { }
             return SystemIcons.Application;
+        }
+
+        private static Icon PngToIcon(System.IO.Stream pngStream, int size)
+        {
+            using var src = System.Drawing.Image.FromStream(pngStream);
+            var bmp = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                g.DrawImage(src, 0, 0, size, size);
+            }
+            return Icon.FromHandle(bmp.GetHicon());
         }
     }
 }
