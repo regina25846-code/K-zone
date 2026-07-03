@@ -53,6 +53,22 @@ namespace KrisZone
             return -1;
         }
 
+        // 배치 후 shadow inset 측정하여 보정
+        private static void ApplyShadowCorrection(IntPtr hwnd, int px, int py, int pw, int ph)
+        {
+            NativeMethods.GetWindowRect(hwnd, out var wr);
+            if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0) return;
+            int il = fr.Left - wr.Left;
+            int it = fr.Top - wr.Top;
+            int ir = wr.Right - fr.Right;
+            int ib = wr.Bottom - fr.Bottom;
+            if (il <= 0 && it <= 0 && ir <= 0 && ib <= 0) return;
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+                px - il, py - it, pw + il + ir, ph + it + ib,
+                NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+        }
+
         // Snap window to zone (in logical coordinates → SetWindowPos uses physical)
         public static void SnapWindow(IntPtr hwnd, ZoneRect zone, MonitorInfo monitor)
         {
@@ -67,8 +83,11 @@ namespace KrisZone
             int pw = (int)Math.Round(r.Width * scale);
             int ph = (int)Math.Round(r.Height * scale);
 
+            // 1차: zone 크기로 배치
             NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
                 NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+            // 2차: 배치 후 실제 shadow 측정하여 보정
+            ApplyShadowCorrection(hwnd, px, py, pw, ph);
         }
 
         // Snap to multiple zones (bounding box)
@@ -91,6 +110,7 @@ namespace KrisZone
 
             NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
                 NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+            ApplyShadowCorrection(hwnd, px, py, pw, ph);
         }
     }
 }
