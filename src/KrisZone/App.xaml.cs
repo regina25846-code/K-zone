@@ -38,6 +38,8 @@ namespace KrisZone
 
             if (SettingsManager.IsFirstRun)
                 SetAutoStart(true);
+            else if (IsAutoStartEnabled())
+                SetAutoStart(true); // 경로가 바뀌었을 경우 갱신
 
             BuildTray();
 
@@ -53,6 +55,10 @@ namespace KrisZone
             base.OnExit(e);
         }
 
+        private static string? GetExePath() =>
+            System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
+            ?? Environment.ProcessPath;
+
         private static void SetAutoStart(bool enable)
         {
             try
@@ -61,7 +67,11 @@ namespace KrisZone
                     @"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
                 if (key == null) return;
                 if (enable)
-                    key.SetValue("K-FancyZones", $"\"{Environment.ProcessPath}\"");
+                {
+                    var path = GetExePath();
+                    if (!string.IsNullOrEmpty(path))
+                        key.SetValue("K-FancyZones", $"\"{path}\"");
+                }
                 else
                     key.DeleteValue("K-FancyZones", throwOnMissingValue: false);
             }
