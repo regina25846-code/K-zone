@@ -7,11 +7,11 @@
         ShowInTaskbar="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Width="320" Height="340"
+        Width="320" Height="360"
         WindowStartupLocation="CenterScreen">
-    <Border Background="#222222" BorderBrush="#333333" BorderThickness="1" CornerRadius="14">
+    <Border Background="#FFFFFF" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="14">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="Black" Opacity="0.8"/>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="Black" Opacity="0.25"/>
         </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
@@ -20,13 +20,13 @@
             </Grid.RowDefinitions>
 
             <!-- 헤더 -->
-            <Border Grid.Row="0" BorderBrush="#2A2A2A" BorderThickness="0,0,0,1" Padding="16,14">
+            <Border Grid.Row="0" BorderBrush="#EEEEEE" BorderThickness="0,0,0,1" Padding="16,14">
                 <Grid>
                     <TextBlock Text="프로그램 정보" FontSize="14" FontWeight="Bold"
-                               Foreground="#F0F0F0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                               Foreground="#111111" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <Button x:Name="CloseBtn" Width="22" Height="22" HorizontalAlignment="Right"
                             Click="CloseBtn_Click" Cursor="Hand"
-                            Background="#3A3A3A" Foreground="#AAAAAA" FontSize="11"
+                            Background="#E5E5E5" Foreground="#555555" FontSize="11"
                             BorderThickness="0" Content="✕">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -57,29 +57,29 @@
                         Margin="24,20,24,20" TextBlock.TextAlignment="Center">
                 <!-- 아이콘 -->
                 <Border Width="84" Height="84" CornerRadius="18" ClipToBounds="True"
-                        Margin="0,0,0,20" Background="#222222">
+                        Margin="0,0,0,20" Background="#FFFFFF">
                     <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
                 </Border>
 
                 <!-- 앱 이름 -->
                 <TextBlock Text="K-FancyZones" FontSize="18" FontWeight="ExtraBold"
-                           Foreground="#F0F0F0" Margin="0,0,0,4"/>
+                           Foreground="#111111" Margin="0,0,0,4"/>
 
                 <!-- 버전 -->
                 <TextBlock x:Name="VersionText" Text="버전 1.0.1" FontSize="12"
-                           Foreground="#888888" Margin="0,0,0,16"/>
+                           Foreground="#999999" Margin="0,0,0,16"/>
 
                 <!-- 구분선 -->
-                <Border Height="1" Background="#2D2D2D" Margin="0,0,0,14"/>
+                <Border Height="1" Background="#EEEEEE" Margin="0,0,0,14"/>
 
                 <!-- 설명 -->
-                <TextBlock FontSize="13" Foreground="#CCCCCC" LineHeight="24" Margin="0,0,0,14">
+                <TextBlock FontSize="13" Foreground="#333333" LineHeight="24" Margin="0,0,0,14">
                     윈도우 멀티 모니터 존 분할 관리<LineBreak/>
                     드래그로 앱을 정해진 영역에 배치
                 </TextBlock>
 
                 <!-- 저작권 -->
-                <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#888888"/>
+                <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#AAAAAA"/>
             </StackPanel>
         </Grid>
     </Border>
