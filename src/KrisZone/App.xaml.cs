@@ -85,6 +85,24 @@ namespace KrisZone
             }
             catch { }
 
+            // Windows 시작 앱 승인 키 (설정 앱 토글과 연동)
+            try
+            {
+                using var approved = Registry.CurrentUser.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run", writable: true)
+                    ?? Registry.CurrentUser.CreateSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run");
+                if (approved != null)
+                {
+                    // 03으로 시작하면 활성, 01이면 비활성
+                    var val = enable
+                        ? new byte[] { 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+                        : new byte[] { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                    approved.SetValue("K-FancyZones", val, RegistryValueKind.Binary);
+                }
+            }
+            catch { }
+
             // 시작 폴더 단축키 방식 (레지스트리보다 더 확실)
             try
             {
