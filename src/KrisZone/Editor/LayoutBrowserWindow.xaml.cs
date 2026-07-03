@@ -51,15 +51,10 @@ namespace KrisZone.Editor
             var monitors = MonitorManager.Monitors.OrderBy(m => m.Bounds.X).ToList();
             _selectedMonitor = monitors.Count > selectedIndex ? monitors[selectedIndex] : null;
 
-            double maxArea = monitors.Count > 0
-                ? monitors.Max(m => m.Bounds.Width * m.Bounds.Height)
-                : 0;
-
             for (int i = 0; i < monitors.Count; i++)
             {
                 int localI = i;
-                bool isLargest = monitors[i].Bounds.Width * monitors[i].Bounds.Height >= maxArea;
-                var tab = CreateMonitorTab(monitors[i], i + 1, i == selectedIndex, isLargest);
+                var tab = CreateMonitorTab(monitors[i], i + 1, i == selectedIndex);
                 MonitorPanel.Children.Add(tab);
                 tab.MouseLeftButtonDown += (_, _) =>
                 {
@@ -70,7 +65,7 @@ namespace KrisZone.Editor
             }
         }
 
-        private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected, bool isLargest = false)
+        private Border CreateMonitorTab(MonitorInfo monitor, int idx, bool selected)
         {
             double monW = monitor.Bounds.Width;
             double monH = monitor.Bounds.Height;
@@ -114,22 +109,6 @@ namespace KrisZone.Editor
                 Foreground = selected ? accent : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
-            if (isLargest)
-            {
-                sp.Children.Add(new Border
-                {
-                    Background = accent,
-                    CornerRadius = new CornerRadius(10),
-                    Padding = new Thickness(6, 2, 6, 2),
-                    Margin = new Thickness(0, 5, 0, 0),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Child = new TextBlock
-                    {
-                        Text = "가장 큼", FontSize = 10, FontWeight = FontWeights.SemiBold,
-                        Foreground = Brushes.White,
-                    },
-                });
-            }
 
             return new Border
             {
