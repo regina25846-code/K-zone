@@ -59,27 +59,58 @@ namespace KrisZone
             System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
             ?? Environment.ProcessPath;
 
+        private static string StartupShortcutPath =>
+            System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+                "K-FancyZones.lnk");
+
         private static void SetAutoStart(bool enable)
         {
+            // 레지스트리 방식
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(
                     @"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-                if (key == null) return;
+                if (key != null)
+                {
+                    if (enable)
+                    {
+                        var path = GetExePath();
+                        if (!string.IsNullOrEmpty(path))
+                            key.SetValue("K-FancyZones", $"\"{path}\"");
+                    }
+                    else
+                        key.DeleteValue("K-FancyZones", throwOnMissingValue: false);
+                }
+            }
+            catch { }
+
+            // 시작 폴더 단축키 방식 (레지스트리보다 더 확실)
+            try
+            {
+                var lnk = StartupShortcutPath;
                 if (enable)
                 {
-                    var path = GetExePath();
-                    if (!string.IsNullOrEmpty(path))
-                        key.SetValue("K-FancyZones", $"\"{path}\"");
+                    var exePath = GetExePath();
+                    if (string.IsNullOrEmpty(exePath)) return;
+                    var ps = $"$s=$((New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}'));$s.TargetPath='{exePath}';$s.Save()";
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{ps}\"",
+                        CreateNoWindow = true,
+                        WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                    })?.WaitForExit(3000);
                 }
-                else
-                    key.DeleteValue("K-FancyZones", throwOnMissingValue: false);
+                else if (System.IO.File.Exists(lnk))
+                    System.IO.File.Delete(lnk);
             }
             catch { }
         }
 
         private static bool IsAutoStartEnabled()
         {
+            if (System.IO.File.Exists(StartupShortcutPath)) return true;
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(
