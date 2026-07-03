@@ -56,8 +56,8 @@
             <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                         Margin="24,0" TextBlock.TextAlignment="Center">
                 <!-- 아이콘 -->
-                <Border Width="84" Height="84" CornerRadius="18" ClipToBounds="True" Margin="0,0,0,16">
-                    <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
+                <Border Width="84" Height="84" CornerRadius="18" ClipToBounds="True" Margin="0,0,0,16" Background="#222222">
+                    <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="Uniform"/>
                 </Border>
 
                 <!-- 앱 이름 -->
