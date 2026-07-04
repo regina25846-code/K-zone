@@ -1,5 +1,5 @@
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.10"
+  #define MyAppVersion "1.1.0"
 #endif
 
 #define MyAppName "K-Zone"
@@ -11,7 +11,8 @@ AppId={{7A2F4B1C-9E3D-4F6A-B8C2-1D5E7F9A3B6C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\{#MyAppName}
+PrivilegesRequired=lowest
+DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=installer
