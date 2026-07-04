@@ -1,15 +1,16 @@
 #ifndef MyAppVersion
-  #define MyAppVersion "1.1.0"
+  #define MyAppVersion "1.1.1"
 #endif
 
 #define MyAppName "K-Zone"
-#define MyAppPublisher "Kris"
+#define MyAppPublisher "KrisB"
 #define MyAppExeName "K-Zone.exe"
 
 [Setup]
 AppId={{7A2F4B1C-9E3D-4F6A-B8C2-1D5E7F9A3B6C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 PrivilegesRequired=lowest
 DefaultDirName={localappdata}\Programs\{#MyAppName}
