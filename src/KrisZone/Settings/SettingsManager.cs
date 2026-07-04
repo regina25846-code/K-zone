@@ -72,6 +72,21 @@ namespace KrisZone.Settings
                     existing.Zones = fresh.Zones;
                 }
             }
+
+            // 같은 이름의 중복 템플릿 제거 (Grid 없는 것 우선 삭제)
+            var duplicates = Current.Layouts
+                .Where(l => l.IsTemplate)
+                .GroupBy(l => l.Name)
+                .Where(g => g.Count() > 1);
+            foreach (var group in duplicates)
+            {
+                var toRemove = group
+                    .OrderBy(l => l.Grid?.Rows ?? 0)
+                    .ThenBy(l => l.Zones?.Count ?? 0)
+                    .First();
+                Current.Layouts.Remove(toRemove);
+            }
+
             Save();
         }
 

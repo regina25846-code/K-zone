@@ -30,22 +30,33 @@ jobs:
       - name: Build
         run: dotnet publish src/KrisZone/KrisZone.csproj -c Release -r win-x64 --no-self-contained -o publish /p:PublishSingleFile=true /p:DebugType=None /p:DebugSymbols=false
 
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Create installer
+        shell: cmd
+        run: |
+          iscc "setup.iss" /DMyAppVersion=${{ steps.ver.outputs.version }}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: K-Zone-${{ steps.ver.outputs.version }}
-          path: publish/K-Zone.exe
+          path: |
+            publish/K-Zone.exe
+            installer/K-Zone.Setup.${{ steps.ver.outputs.version }}.exe
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
           name: K-Zone v${{ steps.ver.outputs.version }}
-          files: publish/K-Zone.exe
+          files: |
+            publish/K-Zone.exe
+            installer/K-Zone.Setup.${{ steps.ver.outputs.version }}.exe
           body: |
             K-Zone v${{ steps.ver.outputs.version }}
-            - 트레이 우클릭 → 프로그램 정보 기능 추가
-            - Windows 10/11 x64 | .NET 8 Runtime 필요
+            Windows 10/11 x64 | .NET 8 Runtime 필요
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
