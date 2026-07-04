@@ -62,7 +62,7 @@
                 </Border>
 
                 <!-- 앱 이름 -->
-                <TextBlock Text="K-FancyZones" FontSize="18" FontWeight="ExtraBold"
+                <TextBlock Text="K-Zone" FontSize="18" FontWeight="ExtraBold"
                            Foreground="#111111" Margin="0,0,0,4"/>
 
                 <!-- 버전 -->

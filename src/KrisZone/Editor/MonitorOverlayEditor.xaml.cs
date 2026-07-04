@@ -230,8 +230,8 @@ namespace KrisZone.Editor
                 {
                     Width  = Math.Max(1, w - gap * 2),
                     Height = Math.Max(1, h - gap * 2),
-                    Background = new SolidColorBrush(Color.FromArgb(90, 0x3B, 0x82, 0xF6)),
-                    BorderBrush = new SolidColorBrush(Color.FromArgb(200, 0x60, 0xA5, 0xFA)),
+                    Background = new SolidColorBrush(Color.FromArgb(45, 0x3B, 0x82, 0xF6)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(120, 0x60, 0xA5, 0xFA)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(3),
                     Cursor = Cursors.Hand,
@@ -490,7 +490,7 @@ namespace KrisZone.Editor
 
             if (vertical)
             {
-                sv.Fill = new SolidColorBrush(Color.FromArgb(180, 0x60, 0xA5, 0xFA));
+                sv.Fill = new SolidColorBrush(Color.FromArgb(100, 0x60, 0xA5, 0xFA));
                 sv.Width = 3;
                 sv.Height = border.Height;
                 sv.HorizontalAlignment = HorizontalAlignment.Left;
@@ -501,7 +501,7 @@ namespace KrisZone.Editor
             }
             else
             {
-                sh.Fill = new SolidColorBrush(Color.FromArgb(180, 0x60, 0xA5, 0xFA));
+                sh.Fill = new SolidColorBrush(Color.FromArgb(100, 0x60, 0xA5, 0xFA));
                 sh.Height = 3;
                 sh.Width = border.Width;
                 sh.VerticalAlignment = VerticalAlignment.Top;
@@ -654,8 +654,8 @@ namespace KrisZone.Editor
             if (zi >= Preview.Children.Count) return;
             var border = (Border)Preview.Children[zi];
             border.Background = selected
-                ? new SolidColorBrush(Color.FromArgb(160, 0x93, 0xC5, 0xFD))
-                : new SolidColorBrush(Color.FromArgb(90, 0x3B, 0x82, 0xF6));
+                ? new SolidColorBrush(Color.FromArgb(90, 0x93, 0xC5, 0xFD))
+                : new SolidColorBrush(Color.FromArgb(45, 0x3B, 0x82, 0xF6));
         }
 
         private List<int> GetSelectedZoneIndices()
@@ -664,7 +664,7 @@ namespace KrisZone.Editor
             for (int zi = 0; zi < Preview.Children.Count; zi++)
             {
                 var b = (Border)Preview.Children[zi];
-                if (b.Background is SolidColorBrush br && br.Color.A == 160)
+                if (b.Background is SolidColorBrush br && br.Color.A == 90)
                     result.Add(zi);
             }
             return result;

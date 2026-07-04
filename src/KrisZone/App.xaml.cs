@@ -62,7 +62,7 @@ namespace KrisZone
         private static string StartupShortcutPath =>
             System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.Startup),
-                "K-FancyZones.lnk");
+                "K-Zone.lnk");
 
         private static void SetAutoStart(bool enable)
         {
@@ -77,10 +77,10 @@ namespace KrisZone
                     {
                         var path = GetExePath();
                         if (!string.IsNullOrEmpty(path))
-                            key.SetValue("K-FancyZones", $"\"{path}\"");
+                            key.SetValue("K-Zone", $"\"{path}\"");
                     }
                     else
-                        key.DeleteValue("K-FancyZones", throwOnMissingValue: false);
+                        key.DeleteValue("K-Zone", throwOnMissingValue: false);
                 }
             }
             catch { }
@@ -98,7 +98,7 @@ namespace KrisZone
                     var val = enable
                         ? new byte[] { 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
                         : new byte[] { 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                    approved.SetValue("K-FancyZones", val, RegistryValueKind.Binary);
+                    approved.SetValue("K-Zone", val, RegistryValueKind.Binary);
                 }
             }
             catch { }
@@ -133,7 +133,7 @@ namespace KrisZone
             {
                 using var key = Registry.CurrentUser.OpenSubKey(
                     @"Software\Microsoft\Windows\CurrentVersion\Run");
-                return key?.GetValue("K-FancyZones") != null;
+                return key?.GetValue("K-Zone") != null;
             }
             catch { return false; }
         }
@@ -148,7 +148,7 @@ namespace KrisZone
             autoStartItem.Click += (_, _) => SetAutoStart(autoStartItem.Checked);
 
             var menu = new ContextMenuStrip();
-            menu.Items.Add("K-FancyZones 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
+            menu.Items.Add("K-Zone 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(autoStartItem);
             menu.Items.Add(new ToolStripSeparator());
@@ -159,7 +159,7 @@ namespace KrisZone
             _trayIcon = new NotifyIcon
             {
                 Icon = GetTrayIcon(),
-                Text = "K-FancyZones",
+                Text = "K-Zone",
                 Visible = true,
                 ContextMenuStrip = menu
             };
@@ -212,7 +212,7 @@ namespace KrisZone
             try
             {
                 var dir = System.IO.Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "K-FancyZones");
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "K-Zone");
                 System.IO.Directory.CreateDirectory(dir);
                 var path = System.IO.Path.Combine(dir, "crash.log");
                 System.IO.File.AppendAllText(path,

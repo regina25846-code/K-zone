@@ -10,7 +10,7 @@ namespace KrisZone.Settings
     internal static class SettingsManager
     {
         private static readonly string ConfigDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "K-FancyZones");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "K-Zone");
         private static readonly string ConfigPath = Path.Combine(ConfigDir, "settings.json");
 
         public static AppSettings Current { get; private set; } = new();

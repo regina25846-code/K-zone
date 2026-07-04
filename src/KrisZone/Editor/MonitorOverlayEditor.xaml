@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="#B2000010"
+        Background="#60000010"
         Topmost="True"
         ShowInTaskbar="False"
         WindowStartupLocation="Manual">
@@ -51,7 +51,7 @@
             </Border.Effect>
             <StackPanel>
                 <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,16"
-                           Text="K-FancyZones 레이아웃 편집기"/>
+                           Text="K-Zone 레이아웃 편집기"/>
 
                 <!-- 분할 안내 -->
                 <TextBlock FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8">
