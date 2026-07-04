@@ -102,64 +102,38 @@ namespace KrisZone.Editor
 
         private void RefreshLayoutCombo()
         {
-            _loadingLayout = true;
-            LayoutCombo.Items.Clear();
-            foreach (var l in SettingsManager.Current.Layouts)
-                LayoutCombo.Items.Add(new ComboBoxItem { Content = l.Name, Tag = l });
-
             var cfg = SettingsManager.Current.MonitorConfigs.FirstOrDefault(c => c.MonitorId == _monitor.Id);
             var targetId = _initialLayoutId ?? cfg?.LayoutId;
-            if (targetId.HasValue)
-                foreach (ComboBoxItem item in LayoutCombo.Items)
-                    if (item.Tag is ZoneLayout l && l.Id == targetId.Value)
-                    { LayoutCombo.SelectedItem = item; break; }
-
-            if (LayoutCombo.SelectedIndex < 0 && LayoutCombo.Items.Count > 0)
-                LayoutCombo.SelectedIndex = 0;
-
-            _loadingLayout = false;
-            SelectCurrentLayout();
+            var target = targetId.HasValue
+                ? SettingsManager.Current.Layouts.FirstOrDefault(l => l.Id == targetId.Value)
+                : null;
+            target ??= SettingsManager.Current.Layouts.FirstOrDefault();
+            if (target != null) LoadLayout(target);
+            else SetupUI();
         }
 
-        private void SelectCurrentLayout()
+        private void LoadLayout(ZoneLayout layout)
         {
-            if (LayoutCombo.SelectedItem is ComboBoxItem { Tag: ZoneLayout l })
-            {
-                _currentLayout = l;
-                LayoutNameBox.Text = l.Name;
-                _undoStack.Clear();
+            _currentLayout = layout;
+            LayoutNameBox.Text = layout.Name;
+            _undoStack.Clear();
 
-                if (_currentLayout.Grid == null)
-                    _currentLayout.Grid = GridMeta.Default1x1();
+            if (_currentLayout.Grid == null)
+                _currentLayout.Grid = GridMeta.Default1x1();
 
-                _data = new GridData(_currentLayout.Grid);
-                UpdateMinZoneSizes();
-            }
+            _data = new GridData(_currentLayout.Grid);
+            UpdateMinZoneSizes();
             SetupUI();
-        }
-
-        private void LayoutCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_loadingLayout) return;
-            SelectCurrentLayout();
         }
 
         private void LayoutNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_currentLayout == null || _loadingLayout) return;
-            _currentLayout.Name = LayoutNameBox.Text;
-            if (LayoutCombo.SelectedItem is ComboBoxItem ci) ci.Content = _currentLayout.Name;
-            SettingsManager.Save();
-        }
-
-        private void AddLayout_Click(object sender, RoutedEventArgs e)
-        {
-            var layout = new ZoneLayout { Name = $"레이아웃 {SettingsManager.Current.Layouts.Count + 1}" };
-            layout.Grid = GridMeta.Default1x1();
-            SettingsManager.Current.Layouts.Add(layout);
-            SettingsManager.Save();
-            RefreshLayoutCombo();
-            LayoutCombo.SelectedIndex = LayoutCombo.Items.Count - 1;
+            if (!_currentLayout.IsTemplate)
+            {
+                _currentLayout.Name = LayoutNameBox.Text;
+                SettingsManager.Save();
+            }
         }
 
         private void Apply_Click(object sender, RoutedEventArgs e)
@@ -172,8 +146,28 @@ namespace KrisZone.Editor
 
         private void IntroSave_Click(object sender, RoutedEventArgs e)
         {
+            if (_currentLayout == null) return;
             IntroPanel.Visibility = Visibility.Collapsed;
-            Apply_Click(sender, e);
+
+            if (_currentLayout.IsTemplate)
+            {
+                var copy = new ZoneLayout
+                {
+                    Name     = LayoutNameBox.Text.Trim(),
+                    IsTemplate = false,
+                    Grid     = _currentLayout.Grid,
+                    Zones    = new List<ZoneRect>(_currentLayout.Zones),
+                };
+                SettingsManager.Current.Layouts.Add(copy);
+                SettingsManager.Save();
+                _currentLayout = copy;
+                ZoneManager.AssignLayout(_monitor, _currentLayout.Id);
+                Close();
+            }
+            else
+            {
+                Apply_Click(sender, e);
+            }
         }
 
         private void IntroCancel_Click(object sender, RoutedEventArgs e) => Close();

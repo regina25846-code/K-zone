@@ -56,14 +56,20 @@ namespace KrisZone.Settings
             var obsolete = new[] { "2열", "3열", "2행" };
             Current.Layouts.RemoveAll(l => l.IsTemplate && obsolete.Contains(l.Name));
 
-            // 새 템플릿 없으면 추가
+            // 새 템플릿 없으면 추가, 있으면 Grid 갱신
             var newDefaults = new[] { Create49Inch(), Create27InchPivot(), Create16InchZeusLab() };
-            foreach (var l in newDefaults)
+            foreach (var fresh in newDefaults)
             {
-                if (!Current.Layouts.Any(x => x.IsTemplate && x.Name == l.Name))
+                var existing = Current.Layouts.FirstOrDefault(x => x.IsTemplate && x.Name == fresh.Name);
+                if (existing == null)
                 {
-                    l.IsTemplate = true;
-                    Current.Layouts.Add(l);
+                    fresh.IsTemplate = true;
+                    Current.Layouts.Add(fresh);
+                }
+                else
+                {
+                    existing.Grid  = fresh.Grid;
+                    existing.Zones = fresh.Zones;
                 }
             }
             Save();
@@ -84,32 +90,56 @@ namespace KrisZone.Settings
             Current.Layouts.AddRange(defaults);
         }
 
-        private static ZoneLayout Create49Inch() => new ZoneLayout
+        private static ZoneLayout Create49Inch()
         {
-            Name = "49인치",
-            Zones = new System.Collections.Generic.List<ZoneRect>
+            var grid = new GridMeta
             {
-                new(0.0000, 0.0000, 0.3720, 1.0000),
-                new(0.3720, 0.0000, 0.3615, 1.0000),
-                new(0.7335, 0.0000, 0.0993, 1.0000),
-                new(0.8328, 0.0000, 0.0939, 0.5007),
-                new(0.8328, 0.5007, 0.0939, 0.4993),
-                new(0.9267, 0.0000, 0.0733, 0.5007),
-                new(0.9267, 0.5007, 0.0733, 0.4993),
-            }
-        };
+                Rows = 2, Columns = 5,
+                RowPercents    = new List<int> { 5007, 4993 },
+                ColumnPercents = new List<int> { 3720, 3615, 993, 939, 733 },
+                CellChildMap   = new List<int> { 0, 1, 2, 3, 5, 0, 1, 2, 4, 6 },
+            };
+            return new ZoneLayout
+            {
+                Name  = "49인치",
+                Type  = LayoutType.Grid,
+                Grid  = grid,
+                Zones = new List<ZoneRect>
+                {
+                    new(0.0000, 0.0000, 0.3720, 1.0000),
+                    new(0.3720, 0.0000, 0.3615, 1.0000),
+                    new(0.7335, 0.0000, 0.0993, 1.0000),
+                    new(0.8328, 0.0000, 0.0939, 0.5007),
+                    new(0.8328, 0.5007, 0.0939, 0.4993),
+                    new(0.9267, 0.0000, 0.0733, 0.5007),
+                    new(0.9267, 0.5007, 0.0733, 0.4993),
+                }
+            };
+        }
 
-        private static ZoneLayout Create27InchPivot() => new ZoneLayout
+        private static ZoneLayout Create27InchPivot()
         {
-            Name = "27인치 피벗",
-            Zones = new System.Collections.Generic.List<ZoneRect>
+            var grid = new GridMeta
             {
-                new(0.0000, 0.0000, 1.0000, 0.3188),
-                new(0.0000, 0.3188, 0.5000, 0.3309),
-                new(0.5000, 0.3188, 0.5000, 0.3309),
-                new(0.0000, 0.6497, 1.0000, 0.3503),
-            }
-        };
+                Rows = 3, Columns = 2,
+                RowPercents    = new List<int> { 3188, 3309, 3503 },
+                ColumnPercents = new List<int> { 5000, 5000 },
+                CellChildMap   = new List<int> { 0, 0, 1, 2, 3, 3 },
+            };
+            return new ZoneLayout
+            {
+                Name  = "27인치 피벗",
+                Type  = LayoutType.Grid,
+                Grid  = grid,
+                Zones = new List<ZoneRect>
+                {
+                    new(0.0000, 0.0000, 1.0000, 0.3188),
+                    new(0.0000, 0.3188, 0.5000, 0.3309),
+                    new(0.5000, 0.3188, 0.5000, 0.3309),
+                    new(0.0000, 0.6497, 1.0000, 0.3503),
+                }
+            };
+        }
 
         private static ZoneLayout Create16InchZeusLab() => new ZoneLayout
         {
