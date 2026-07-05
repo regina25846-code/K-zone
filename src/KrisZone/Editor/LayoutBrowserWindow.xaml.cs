@@ -235,7 +235,6 @@ namespace KrisZone.Editor
                 card.MouseLeave += (_, _) => card.BorderBrush = lineGray;
             }
 
-            if (!layout.IsTemplate)
             {
                 var menu = new ContextMenu();
                 var deleteItem = new MenuItem { Header = "삭제" };
