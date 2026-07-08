@@ -68,6 +68,14 @@ namespace KrisZone.Settings
                 }
                 else
                 {
+                    // 예전 버전에서 랜덤 Id로 저장된 템플릿을 고정 Id로 정리.
+                    // 모니터 할당이 예전 Id를 참조 중이면 같이 재연결해야 끊기지 않음.
+                    if (existing.Id != fresh.Id)
+                    {
+                        foreach (var mc in Current.MonitorConfigs.Where(c => c.LayoutId == existing.Id))
+                            mc.LayoutId = fresh.Id;
+                        existing.Id = fresh.Id;
+                    }
                     existing.Grid  = fresh.Grid;
                     existing.Zones = fresh.Zones;
                 }
@@ -80,10 +88,18 @@ namespace KrisZone.Settings
                 .Where(g => g.Count() > 1);
             foreach (var group in duplicates)
             {
-                var toRemove = group
+                var ordered = group
                     .OrderBy(l => l.Grid?.Rows ?? 0)
                     .ThenBy(l => l.Zones?.Count ?? 0)
-                    .First();
+                    .ToList();
+                var toRemove = ordered.First();
+                var survivor = ordered.Last();
+
+                // 제거되는 레이아웃을 모니터에 할당해둔 경우, 남는 레이아웃으로 재연결
+                // (안 하면 MonitorConfig.LayoutId가 삭제된 Id를 가리켜 배치가 조용히 무시됨)
+                foreach (var mc in Current.MonitorConfigs.Where(c => c.LayoutId == toRemove.Id))
+                    mc.LayoutId = survivor.Id;
+
                 Current.Layouts.Remove(toRemove);
             }
 
@@ -105,6 +121,12 @@ namespace KrisZone.Settings
             Current.Layouts.AddRange(defaults);
         }
 
+        // 기본 템플릿은 고정 Id 사용: 매 실행마다 새 Guid를 발급하면
+        // 삭제 후 재생성되거나 마이그레이션될 때마다 MonitorConfig.LayoutId 참조가 끊어짐
+        private static readonly Guid Id49Inch       = new("A1B2C3D4-0001-4E5F-8A9B-000000000001");
+        private static readonly Guid Id27InchPivot  = new("A1B2C3D4-0001-4E5F-8A9B-000000000002");
+        private static readonly Guid Id16InchZeus   = new("A1B2C3D4-0001-4E5F-8A9B-000000000003");
+
         private static ZoneLayout Create49Inch()
         {
             var grid = new GridMeta
@@ -116,6 +138,7 @@ namespace KrisZone.Settings
             };
             return new ZoneLayout
             {
+                Id    = Id49Inch,
                 Name  = "49인치",
                 Type  = LayoutType.Grid,
                 Grid  = grid,
@@ -143,6 +166,7 @@ namespace KrisZone.Settings
             };
             return new ZoneLayout
             {
+                Id    = Id27InchPivot,
                 Name  = "27인치 피벗",
                 Type  = LayoutType.Grid,
                 Grid  = grid,
@@ -158,7 +182,16 @@ namespace KrisZone.Settings
 
         private static ZoneLayout Create16InchZeusLab() => new ZoneLayout
         {
+            Id   = Id16InchZeus,
             Name = "16인치 제우스랩",
+            Type = LayoutType.Grid,
+            Grid = new GridMeta
+            {
+                Rows = 1, Columns = 1,
+                RowPercents    = new List<int> { 10000 },
+                ColumnPercents = new List<int> { 10000 },
+                CellChildMap   = new List<int> { 0 },
+            },
             Zones = new System.Collections.Generic.List<ZoneRect>
             {
                 new(0.0, 0.0, 1.0, 1.0),
