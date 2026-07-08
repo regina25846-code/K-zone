@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using KrisZone.Settings;
 
 namespace KrisZone
@@ -25,6 +26,7 @@ namespace KrisZone
         private List<int> _highlighted = new();
         private bool _draggingWindowTransparent = false;
         private long _lastLocationTick = 0;
+        private DispatcherTimer? _mouseUpWatcher;
 
         public DragSnapEngine()
         {
@@ -153,6 +155,7 @@ namespace KrisZone
                     _overlay.Show(monitor, layout, newHighlighted);
                     _overlayActive = true;
                     _currentMonitor = monitor;
+                    StartMouseUpWatcher();
                 });
             }
             else if (!newHighlighted.SequenceEqual(_highlighted))
@@ -167,12 +170,20 @@ namespace KrisZone
         private void OnMoveEnd(IntPtr hwnd)
         {
             if (hwnd != _draggingHwnd) return;
+            FinalizeDrag(hwnd);
+        }
+
+        // 드래그 종료 처리. 정상적으로는 OnMoveEnd(핸들 일치)로 들어오지만,
+        // 크로미움 계열 브라우저의 탭 분리처럼 시작/종료 이벤트의 창 핸들이
+        // 달라지는 경우를 대비해 마우스 버튼 상태 감시(StartMouseUpWatcher)에서도 호출됨.
+        private void FinalizeDrag(IntPtr hwnd)
+        {
+            if (_draggingHwnd == IntPtr.Zero && !_overlayActive) return;
 
             RemoveTransparency(hwnd);
-
             HideOverlay();
 
-            if (_highlighted.Count > 0 && _currentMonitor != null)
+            if (hwnd != IntPtr.Zero && _highlighted.Count > 0 && _currentMonitor != null)
             {
                 var monitor = _currentMonitor;
                 var layout = ZoneManager.GetLayoutForMonitor(monitor);
@@ -206,6 +217,25 @@ namespace KrisZone
                 System.Windows.Application.Current.Dispatcher.BeginInvoke(() => _overlay?.Hide());
                 _overlayActive = false;
             }
+            StopMouseUpWatcher();
+        }
+
+        private void StartMouseUpWatcher()
+        {
+            if (_mouseUpWatcher != null) return;
+            _mouseUpWatcher = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(150) };
+            _mouseUpWatcher.Tick += (s, e) =>
+            {
+                bool lButtonDown = (NativeMethods.GetAsyncKeyState(NativeMethods.VK_LBUTTON) & 0x8000) != 0;
+                if (!lButtonDown) FinalizeDrag(_draggingHwnd);
+            };
+            _mouseUpWatcher.Start();
+        }
+
+        private void StopMouseUpWatcher()
+        {
+            _mouseUpWatcher?.Stop();
+            _mouseUpWatcher = null;
         }
 
         private bool IsExcluded(IntPtr hwnd)
@@ -233,6 +263,10 @@ namespace KrisZone
             catch { return null; }
         }
 
-        public void Dispose() => Uninstall();
+        public void Dispose()
+        {
+            Uninstall();
+            StopMouseUpWatcher();
+        }
     }
 }
