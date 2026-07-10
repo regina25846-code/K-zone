@@ -29,7 +29,7 @@ namespace KrisZone
             };
         }
 
-        public void UpdateRect(NativeMethods.RECT r, double scale)
+        internal void UpdateRect(NativeMethods.RECT r, double scale)
         {
             Left = r.Left / scale;
             Top = r.Top / scale;
