@@ -13,6 +13,7 @@ namespace KrisZone
         private NotifyIcon? _trayIcon;
         private DragSnapEngine? _engine;
         private HotkeyEngine? _hotkeys;
+        private AlwaysOnTopEngine? _alwaysOnTop;
         private System.Threading.Mutex? _singleInstanceMutex;
 
         protected override void OnStartup(StartupEventArgs e)
@@ -43,6 +44,9 @@ namespace KrisZone
             _engine = new DragSnapEngine();
             _engine.Install();
 
+            _alwaysOnTop = new AlwaysOnTopEngine();
+            _alwaysOnTop.Install();
+
             _hotkeys = new HotkeyEngine();
             _hotkeys.Install();
 
@@ -61,6 +65,7 @@ namespace KrisZone
         {
             _engine?.Dispose();
             _hotkeys?.Dispose();
+            _alwaysOnTop?.Dispose();
             _trayIcon?.Dispose();
             base.OnExit(e);
         }
@@ -159,6 +164,7 @@ namespace KrisZone
 
             var menu = new ContextMenuStrip();
             menu.Items.Add("K-Zone 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
+            menu.Items.Add("설정", null, (_, _) => OpenSettings());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(autoStartItem);
             menu.Items.Add(new ToolStripSeparator());

@@ -282,8 +282,7 @@ namespace KrisZone.Editor
             TransparentCheck.IsChecked = s.MakeDraggedWindowTransparent;
             ShowNumberCheck.IsChecked = s.ShowZoneNumber;
             OverrideSnapCheck.IsChecked = s.OverrideSnapHotkeys;
-            AppLastZoneCheck.IsChecked = s.AppLastZone;
-            ExcludedAppsBox.Text = string.Join("\n", s.ExcludedApps);
+            AlwaysOnTopCheck.IsChecked = s.AlwaysOnTopEnabled;
             _loadingSettings = false;
         }
 
@@ -312,16 +311,7 @@ namespace KrisZone.Editor
             s.MakeDraggedWindowTransparent = TransparentCheck.IsChecked == true;
             s.ShowZoneNumber = ShowNumberCheck.IsChecked == true;
             s.OverrideSnapHotkeys = OverrideSnapCheck.IsChecked == true;
-            s.AppLastZone = AppLastZoneCheck.IsChecked == true;
-            SettingsManager.Save();
-        }
-
-        private void ExcludedApps_Changed(object sender, TextChangedEventArgs e)
-        {
-            if (_loadingSettings) return;
-            SettingsManager.Current.ExcludedApps = ExcludedAppsBox.Text
-                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+            s.AlwaysOnTopEnabled = AlwaysOnTopCheck.IsChecked == true;
             SettingsManager.Save();
         }
     }
