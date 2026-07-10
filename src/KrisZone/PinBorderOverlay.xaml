@@ -9,7 +9,7 @@
         IsHitTestVisible="False"
         ShowActivated="False">
     <Border x:Name="BorderRect"
-            BorderThickness="3"
+            BorderThickness="2"
             CornerRadius="4"
             Background="Transparent"
             IsHitTestVisible="False"/>

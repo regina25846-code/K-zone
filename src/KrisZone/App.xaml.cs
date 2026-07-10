@@ -164,6 +164,7 @@ namespace KrisZone
 
             var menu = new ContextMenuStrip();
             menu.Items.Add("K-Zone 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
+            menu.Items.Add("설정", null, (_, _) => OpenSettings());
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(autoStartItem);
             menu.Items.Add(new ToolStripSeparator());

@@ -39,6 +39,11 @@
             <CheckBox x:Name="AlwaysOnTopCheck" Content="Win+Ctrl+X 항상 위 고정/해제" Foreground="White"
                       FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
 
+            <TextBlock Text="항상 위 테두리 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,4,0,6"/>
+            <TextBox x:Name="AlwaysOnTopColorBox" Background="#2A2A3E" Foreground="White"
+                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                     TextChanged="ZoneColor_Changed"/>
+
             <Separator Background="#2A2A4E" Margin="0,18,0,18"/>
 
             <TextBlock Text="제외 앱 (줄바꿈으로 구분)" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>

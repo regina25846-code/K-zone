@@ -79,7 +79,13 @@ namespace KrisZone
 
         private void RepositionOverlay(IntPtr hwnd, PinBorderOverlay overlay)
         {
-            if (!NativeMethods.GetWindowRect(hwnd, out var r)) return;
+            // GetWindowRect는 DWM 그림자 여백까지 포함돼서 테두리가 헐렁하게 뜸 —
+            // 실제 보이는 영역만 주는 DWMWA_EXTENDED_FRAME_BOUNDS로 타이트하게 맞춤
+            if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out var r, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0)
+            {
+                if (!NativeMethods.GetWindowRect(hwnd, out r)) return;
+            }
             var monitor = MonitorManager.GetMonitorFromWindow(hwnd);
             overlay.UpdateRect(r, monitor?.ScaleFactor ?? 1.0);
         }

@@ -29,6 +29,7 @@ namespace KrisZone.Editor
             OverrideSnapCheck.IsChecked = s.OverrideSnapHotkeys;
             AppLastZoneCheck.IsChecked  = s.AppLastZone;
             AlwaysOnTopCheck.IsChecked  = s.AlwaysOnTopEnabled;
+            AlwaysOnTopColorBox.Text    = s.AlwaysOnTopBorderColor;
             ExcludedAppsBox.Text = string.Join("\n", s.ExcludedApps);
             _loading = false;
         }
@@ -38,6 +39,7 @@ namespace KrisZone.Editor
             if (_loading) return;
             SettingsManager.Current.ZoneColor = ZoneColorBox.Text;
             SettingsManager.Current.ZoneHighlightColor = HighlightColorBox.Text;
+            SettingsManager.Current.AlwaysOnTopBorderColor = AlwaysOnTopColorBox.Text;
             SettingsManager.Save();
         }
 
