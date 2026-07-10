@@ -283,6 +283,7 @@ namespace KrisZone.Editor
             ShowNumberCheck.IsChecked = s.ShowZoneNumber;
             OverrideSnapCheck.IsChecked = s.OverrideSnapHotkeys;
             AppLastZoneCheck.IsChecked = s.AppLastZone;
+            AlwaysOnTopCheck.IsChecked = s.AlwaysOnTopEnabled;
             ExcludedAppsBox.Text = string.Join("\n", s.ExcludedApps);
             _loadingSettings = false;
         }
@@ -313,6 +314,7 @@ namespace KrisZone.Editor
             s.ShowZoneNumber = ShowNumberCheck.IsChecked == true;
             s.OverrideSnapHotkeys = OverrideSnapCheck.IsChecked == true;
             s.AppLastZone = AppLastZoneCheck.IsChecked == true;
+            s.AlwaysOnTopEnabled = AlwaysOnTopCheck.IsChecked == true;
             SettingsManager.Save();
         }
 

@@ -1,0 +1,16 @@
+<Window x:Class="KrisZone.PinBorderOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        IsHitTestVisible="False"
+        ShowActivated="False">
+    <Border x:Name="BorderRect"
+            BorderThickness="3"
+            CornerRadius="4"
+            Background="Transparent"
+            IsHitTestVisible="False"/>
+</Window>

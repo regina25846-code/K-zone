@@ -32,16 +32,22 @@ namespace KrisZone
 
         public void Install()
         {
-            if (!SettingsManager.Current.OverrideSnapHotkeys) return;
+            if (!SettingsManager.Current.OverrideSnapHotkeys && !SettingsManager.Current.AlwaysOnTopEnabled) return;
 
             _form = new HotkeyForm(this);
             // Accessing Handle auto-creates the native window handle
             var _ = _form.Handle;
 
-            RegisterHotKey(_form.Handle, 1, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Left);
-            RegisterHotKey(_form.Handle, 2, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Right);
-            RegisterHotKey(_form.Handle, 3, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Up);
-            RegisterHotKey(_form.Handle, 4, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Down);
+            if (SettingsManager.Current.OverrideSnapHotkeys)
+            {
+                RegisterHotKey(_form.Handle, 1, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Left);
+                RegisterHotKey(_form.Handle, 2, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Right);
+                RegisterHotKey(_form.Handle, 3, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Up);
+                RegisterHotKey(_form.Handle, 4, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.Down);
+            }
+
+            if (SettingsManager.Current.AlwaysOnTopEnabled)
+                RegisterHotKey(_form.Handle, 5, MOD_WIN | MOD_CTRL | MOD_NOREPEAT, (uint)Keys.X);
         }
 
         public void Reinstall()
@@ -54,6 +60,12 @@ namespace KrisZone
         {
             var hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == IntPtr.Zero) return;
+
+            if (id == 5)
+            {
+                AlwaysOnTopEngine.Instance?.Toggle(hwnd);
+                return;
+            }
 
             var monitor = MonitorManager.GetMonitorFromWindow(hwnd);
             if (monitor == null) return;
@@ -110,6 +122,7 @@ namespace KrisZone
                 UnregisterHotKey(_form.Handle, 2);
                 UnregisterHotKey(_form.Handle, 3);
                 UnregisterHotKey(_form.Handle, 4);
+                UnregisterHotKey(_form.Handle, 5);
                 _form.Dispose();
                 _form = null;
             }

@@ -164,6 +164,8 @@
                               FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
                     <CheckBox x:Name="AppLastZoneCheck" Content="앱별 마지막 존 기억" Foreground="White"
                               FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                    <CheckBox x:Name="AlwaysOnTopCheck" Content="Win+Ctrl+X 항상 위 고정/해제" Foreground="White"
+                              FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
 
                     <Separator Background="#2A2A4E" Margin="0,16,0,16"/>
 

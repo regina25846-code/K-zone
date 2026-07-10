@@ -78,6 +78,8 @@ namespace KrisZone.Models
         public bool ShowZoneNumber { get; set; } = true;
         public bool OverrideSnapHotkeys { get; set; } = false;
         public bool AppLastZone { get; set; } = false;
+        public bool AlwaysOnTopEnabled { get; set; } = true;
+        public string AlwaysOnTopBorderColor { get; set; } = "#38BDF8";
         public string ZoneColor { get; set; } = "#BAE6FD";
         public string ZoneBorderColor { get; set; } = "#FFFFFF";
         public string ZoneHighlightColor { get; set; } = "#38BDF8";
