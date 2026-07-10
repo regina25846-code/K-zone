@@ -19,9 +19,18 @@
                          TextChanged="ZoneColor_Changed"/>
                 <Border x:Name="ZoneColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
                         BorderBrush="#3A3A5E" BorderThickness="1"/>
-                <Button x:Name="ZoneColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                <Button x:Name="ZoneColorPickBtn" Grid.Column="2" Margin="4,0,0,0" ToolTip="스포이드"
                         Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
-                        Click="EyeDropper_Click" Tag="ZoneColorBox"/>
+                        Click="EyeDropper_Click" Tag="ZoneColorBox">
+                    <Viewbox Width="15" Height="15">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M13.5,6.5 L17.5,10.5" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Path Data="M17,3 L21,7 L18.5,9.5 L14.5,5.5 Z" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+                            <Path Data="M14.5,5.5 L5,15 L5,19 L9,19 L18.5,9.5" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Ellipse Canvas.Left="6.4" Canvas.Top="15.4" Width="2.2" Height="2.2" Fill="White"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
             </Grid>
 
             <TextBlock Text="하이라이트 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
@@ -36,9 +45,18 @@
                          TextChanged="ZoneColor_Changed"/>
                 <Border x:Name="HighlightColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
                         BorderBrush="#3A3A5E" BorderThickness="1"/>
-                <Button x:Name="HighlightColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                <Button x:Name="HighlightColorPickBtn" Grid.Column="2" Margin="4,0,0,0" ToolTip="스포이드"
                         Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
-                        Click="EyeDropper_Click" Tag="HighlightColorBox"/>
+                        Click="EyeDropper_Click" Tag="HighlightColorBox">
+                    <Viewbox Width="15" Height="15">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M13.5,6.5 L17.5,10.5" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Path Data="M17,3 L21,7 L18.5,9.5 L14.5,5.5 Z" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+                            <Path Data="M14.5,5.5 L5,15 L5,19 L9,19 L18.5,9.5" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Ellipse Canvas.Left="6.4" Canvas.Top="15.4" Width="2.2" Height="2.2" Fill="White"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
             </Grid>
 
             <TextBlock Text="불투명도 (0~100)" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
@@ -73,9 +91,18 @@
                          TextChanged="ZoneColor_Changed"/>
                 <Border x:Name="AlwaysOnTopColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
                         BorderBrush="#3A3A5E" BorderThickness="1"/>
-                <Button x:Name="AlwaysOnTopColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                <Button x:Name="AlwaysOnTopColorPickBtn" Grid.Column="2" Margin="4,0,0,0" ToolTip="스포이드"
                         Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
-                        Click="EyeDropper_Click" Tag="AlwaysOnTopColorBox"/>
+                        Click="EyeDropper_Click" Tag="AlwaysOnTopColorBox">
+                    <Viewbox Width="15" Height="15">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M13.5,6.5 L17.5,10.5" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Path Data="M17,3 L21,7 L18.5,9.5 L14.5,5.5 Z" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+                            <Path Data="M14.5,5.5 L5,15 L5,19 L9,19 L18.5,9.5" Stroke="White" StrokeThickness="1.8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            <Ellipse Canvas.Left="6.4" Canvas.Top="15.4" Width="2.2" Height="2.2" Fill="White"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
             </Grid>
         </StackPanel>
     </ScrollViewer>
