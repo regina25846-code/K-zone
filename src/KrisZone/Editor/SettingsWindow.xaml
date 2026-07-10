@@ -8,14 +8,38 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20,20,20,20">
             <TextBlock Text="존 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>
-            <TextBox x:Name="ZoneColorBox" Background="#2A2A3E" Foreground="White"
-                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
-                     TextChanged="ZoneColor_Changed"/>
+            <Grid Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="34"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="ZoneColorBox" Grid.Column="0" Background="#2A2A3E" Foreground="White"
+                         BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                         TextChanged="ZoneColor_Changed"/>
+                <Border x:Name="ZoneColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
+                        BorderBrush="#3A3A5E" BorderThickness="1"/>
+                <Button x:Name="ZoneColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                        Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
+                        Click="EyeDropper_Click" Tag="ZoneColorBox"/>
+            </Grid>
 
             <TextBlock Text="하이라이트 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
-            <TextBox x:Name="HighlightColorBox" Background="#2A2A3E" Foreground="White"
-                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
-                     TextChanged="ZoneColor_Changed"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="34"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="HighlightColorBox" Grid.Column="0" Background="#2A2A3E" Foreground="White"
+                         BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                         TextChanged="ZoneColor_Changed"/>
+                <Border x:Name="HighlightColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
+                        BorderBrush="#3A3A5E" BorderThickness="1"/>
+                <Button x:Name="HighlightColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                        Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
+                        Click="EyeDropper_Click" Tag="HighlightColorBox"/>
+            </Grid>
 
             <TextBlock Text="불투명도 (0~100)" FontSize="12" Foreground="#9CA3AF" Margin="0,14,0,6"/>
             <Slider x:Name="OpacitySlider" Minimum="0" Maximum="100" Value="50"
@@ -34,23 +58,25 @@
                       FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
             <CheckBox x:Name="OverrideSnapCheck" Content="Win+방향키 오버라이드" Foreground="White"
                       FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-            <CheckBox x:Name="AppLastZoneCheck" Content="앱별 마지막 존 기억" Foreground="White"
-                      FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
             <CheckBox x:Name="AlwaysOnTopCheck" Content="Win+Ctrl+X 항상 위 고정/해제" Foreground="White"
                       FontSize="13" Margin="0,0,0,10" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
 
             <TextBlock Text="항상 위 테두리 색상" FontSize="12" Foreground="#9CA3AF" Margin="0,4,0,6"/>
-            <TextBox x:Name="AlwaysOnTopColorBox" Background="#2A2A3E" Foreground="White"
-                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
-                     TextChanged="ZoneColor_Changed"/>
-
-            <Separator Background="#2A2A4E" Margin="0,18,0,18"/>
-
-            <TextBlock Text="제외 앱 (줄바꿈으로 구분)" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>
-            <TextBox x:Name="ExcludedAppsBox" Background="#2A2A3E" Foreground="White"
-                     BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
-                     AcceptsReturn="True" Height="100" VerticalScrollBarVisibility="Auto"
-                     TextChanged="ExcludedApps_Changed"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="34"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="AlwaysOnTopColorBox" Grid.Column="0" Background="#2A2A3E" Foreground="White"
+                         BorderBrush="#3A3A5E" Padding="8,6" FontSize="13"
+                         TextChanged="ZoneColor_Changed"/>
+                <Border x:Name="AlwaysOnTopColorPreview" Grid.Column="1" Margin="6,0,0,0" CornerRadius="4"
+                        BorderBrush="#3A3A5E" BorderThickness="1"/>
+                <Button x:Name="AlwaysOnTopColorPickBtn" Grid.Column="2" Content="스포이드" FontSize="9" Margin="4,0,0,0"
+                        Background="#2A2A3E" Foreground="White" BorderBrush="#3A3A5E"
+                        Click="EyeDropper_Click" Tag="AlwaysOnTopColorBox"/>
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </Window>

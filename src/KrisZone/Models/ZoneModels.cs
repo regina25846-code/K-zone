@@ -77,7 +77,6 @@ namespace KrisZone.Models
         public bool MakeDraggedWindowTransparent { get; set; } = true;
         public bool ShowZoneNumber { get; set; } = true;
         public bool OverrideSnapHotkeys { get; set; } = false;
-        public bool AppLastZone { get; set; } = false;
         public bool AlwaysOnTopEnabled { get; set; } = true;
         public string AlwaysOnTopBorderColor { get; set; } = "#8B95A5";
         public string ZoneColor { get; set; } = "#BAE6FD";
@@ -85,9 +84,7 @@ namespace KrisZone.Models
         public string ZoneHighlightColor { get; set; } = "#38BDF8";
         public string ZoneNumberColor { get; set; } = "#FFFFFF";
         public int ZoneHighlightOpacity { get; set; } = 30;
-        public List<string> ExcludedApps { get; set; } = new();
         public List<ZoneLayout> Layouts { get; set; } = new();
         public List<MonitorConfig> MonitorConfigs { get; set; } = new();
-        public Dictionary<string, Guid> AppLastZoneMap { get; set; } = new();
     }
 }

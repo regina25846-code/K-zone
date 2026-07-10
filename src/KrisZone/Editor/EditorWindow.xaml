@@ -162,18 +162,8 @@
                               FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
                     <CheckBox x:Name="OverrideSnapCheck" Content="Win+방향키 오버라이드" Foreground="White"
                               FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                    <CheckBox x:Name="AppLastZoneCheck" Content="앱별 마지막 존 기억" Foreground="White"
-                              FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
                     <CheckBox x:Name="AlwaysOnTopCheck" Content="Win+Ctrl+X 항상 위 고정/해제" Foreground="White"
                               FontSize="12" Margin="0,0,0,8" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-
-                    <Separator Background="#2A2A4E" Margin="0,16,0,16"/>
-
-                    <TextBlock Text="제외 앱 (줄바꿈으로 구분)" FontSize="12" Foreground="#9CA3AF" Margin="0,0,0,6"/>
-                    <TextBox x:Name="ExcludedAppsBox" Background="#2A2A3E" Foreground="White"
-                             BorderBrush="#3A3A5E" Padding="6,4" FontSize="12"
-                             AcceptsReturn="True" Height="80" VerticalScrollBarVisibility="Auto"
-                             TextChanged="ExcludedApps_Changed"/>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

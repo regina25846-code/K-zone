@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 using KrisZone.Settings;
@@ -70,7 +68,6 @@ namespace KrisZone
 
         private void OnMoveStart(IntPtr hwnd)
         {
-            if (IsExcluded(hwnd)) return;
             _draggingHwnd = hwnd;
             _highlighted = new List<int>();
             // 투명화는 Shift 누를 때 OnLocationChange에서 처리
@@ -193,14 +190,6 @@ namespace KrisZone
                     System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                     {
                         ZoneManager.SnapWindowMulti(hwnd, highlighted, layout, monitor);
-
-                        // Remember last zone for this app
-                        if (SettingsManager.Current.AppLastZone)
-                        {
-                            string? appName = GetProcessName(hwnd);
-                            if (appName != null && highlighted.Count == 1)
-                                SettingsManager.Current.AppLastZoneMap[appName] = layout.Zones.Count > highlighted[0] ? layout.Id : Guid.Empty;
-                        }
                     });
                 }
             }
@@ -236,31 +225,6 @@ namespace KrisZone
         {
             _mouseUpWatcher?.Stop();
             _mouseUpWatcher = null;
-        }
-
-        private bool IsExcluded(IntPtr hwnd)
-        {
-            var excluded = SettingsManager.Current.ExcludedApps;
-            if (excluded.Count == 0) return false;
-            string? name = GetProcessName(hwnd);
-            if (name == null) return false;
-            return excluded.Any(e => name.IndexOf(e, StringComparison.OrdinalIgnoreCase) >= 0);
-        }
-
-        private static string? GetProcessName(IntPtr hwnd)
-        {
-            try
-            {
-                NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-                var h = NativeMethods.OpenProcess(NativeMethods.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-                if (h == IntPtr.Zero) return null;
-                var sb = new StringBuilder(1024);
-                uint size = (uint)sb.Capacity;
-                NativeMethods.QueryFullProcessImageName(h, 0, sb, ref size);
-                NativeMethods.CloseHandle(h);
-                return System.IO.Path.GetFileNameWithoutExtension(sb.ToString());
-            }
-            catch { return null; }
         }
 
         public void Dispose()
