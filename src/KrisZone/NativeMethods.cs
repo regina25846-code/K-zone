@@ -118,5 +118,10 @@ namespace KrisZone
         public const uint DWMWA_EXTENDED_FRAME_BOUNDS = 9;
         [DllImport("dwmapi.dll")]
         public static extern int DwmGetWindowAttribute(IntPtr hwnd, uint dwAttribute, out RECT pvAttribute, int cbAttribute);
+
+        // DWM 합성이 SetWindowPos 반영을 끝낼 때까지 대기 — 이걸 안 하면 shadow 측정이
+        // 직전 배치 결과가 아니라 그 이전 프레임의 stale한 값을 읽어올 수 있음
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmFlush();
     }
 }

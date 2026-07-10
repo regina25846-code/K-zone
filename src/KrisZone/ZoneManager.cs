@@ -53,20 +53,43 @@ namespace KrisZone
             return -1;
         }
 
-        // 배치 후 shadow inset 측정하여 보정
+        // 배치 후 shadow inset 측정하여 보정.
+        // 한 번의 측정값으로 한 번만 보정하면(예전 방식) 같은 창을 같은 zone에 다시 배치할 때
+        // shadow inset이 처음 측정값과 달라지는 경우(재배치 직전 창 상태에 따라 값이 흔들림)
+        // 과보정/저보정이 나서 왼쪽위로 밀리거나 여백이 남는 문제가 있었음.
+        // "현재 보이는 영역(fr)이 목표(px,py,pw,ph)와 얼마나 다른가"를 직접 측정해서 그 차이만큼만
+        // raw rect를 옮기는 방식으로 바꾸고, 이걸 값이 수렴할 때까지 최대 3번 반복함 — 어떤
+        // 이유로 틀어지든(타이밍, DPI, 이전 상태 등) 결국 목표에 맞춰짐.
         private static void ApplyShadowCorrection(IntPtr hwnd, int px, int py, int pw, int ph)
         {
-            NativeMethods.GetWindowRect(hwnd, out var wr);
-            if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
-                    out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0) return;
-            int il = fr.Left - wr.Left;
-            int it = fr.Top - wr.Top;
-            int ir = wr.Right - fr.Right;
-            int ib = wr.Bottom - fr.Bottom;
-            if (il <= 0 && it <= 0 && ir <= 0 && ib <= 0) return;
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
-                px - il, py - it, pw + il + ir, ph + it + ib,
-                NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+            int curLeft = px, curTop = py, curRight = px + pw, curBottom = py + ph;
+
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                NativeMethods.DwmFlush();
+                NativeMethods.GetWindowRect(hwnd, out var wr);
+                if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
+                        out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0) return;
+
+                // 실제 보이는 영역(fr)이 목표(px,py,px+pw,py+ph)와 얼마나 어긋났는지
+                int errLeft = px - fr.Left;
+                int errTop = py - fr.Top;
+                int errRight = (px + pw) - fr.Right;
+                int errBottom = (py + ph) - fr.Bottom;
+
+                if (errLeft == 0 && errTop == 0 && errRight == 0 && errBottom == 0) return;
+
+                // raw rect(wr)를 오차만큼 보정 — fr이 wr 안에서 상대적으로 어디 있는지는 유지한 채
+                // 목표와의 차이만큼만 이동/확장
+                curLeft = wr.Left + errLeft;
+                curTop = wr.Top + errTop;
+                curRight = wr.Right + errRight;
+                curBottom = wr.Bottom + errBottom;
+
+                NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+                    curLeft, curTop, curRight - curLeft, curBottom - curTop,
+                    NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+            }
         }
 
         // Snap window to zone (in logical coordinates → SetWindowPos uses physical)

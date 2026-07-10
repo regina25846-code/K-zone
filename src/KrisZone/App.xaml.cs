@@ -13,10 +13,20 @@ namespace KrisZone
         private NotifyIcon? _trayIcon;
         private DragSnapEngine? _engine;
         private HotkeyEngine? _hotkeys;
+        private System.Threading.Mutex? _singleInstanceMutex;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // 중복 실행 방지 — 두 인스턴스가 동시에 떠있으면 서로 다른 WinEvent 훅/SetWindowPos가
+            // 충돌해서 존 배치가 흔들리는 등 예측 불가능한 버그가 생김
+            _singleInstanceMutex = new System.Threading.Mutex(true, "KrisZone_SingleInstance_Mutex", out bool createdNew);
+            if (!createdNew)
+            {
+                Shutdown();
+                return;
+            }
 
             // 크래시 로그
             AppDomain.CurrentDomain.UnhandledException += (_, ex) =>
