@@ -47,3 +47,17 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "K-Zone 실행"; Flags: nowait postinstall skipifsilent
+
+[Code]
+// CloseApplications=yes(RestartManager)가 트레이 상주 앱은 못 알아채는 경우가 있어서,
+// 파일 덮어쓰기 직전에 taskkill로 확실하게 강제 종료함.
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+begin
+  if CurStep = ssInstall then
+  begin
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName} /T', '',
+      SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  end;
+end;
