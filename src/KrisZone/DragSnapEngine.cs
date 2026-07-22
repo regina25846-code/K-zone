@@ -111,11 +111,6 @@ namespace KrisZone
                 return;
             }
 
-            // 16ms throttle (60fps 이상 이벤트 skip)
-            long now = System.Environment.TickCount64;
-            if (now - _lastLocationTick < 16) return;
-            _lastLocationTick = now;
-
             // Shift 누른 순간 투명화 적용
             if (s.MakeDraggedWindowTransparent)
                 ApplyTransparency(_draggingHwnd);
@@ -151,29 +146,42 @@ namespace KrisZone
                 newHighlighted = new List<int> { hitIndex };
             }
 
-            if (_overlay == null || !_overlayActive || _currentMonitor?.Handle != monitor.Handle)
+            // ⚠️ 스냅 정확도의 핵심: _highlighted(어느 구역인지)와 _currentMonitor는 throttle 없이
+            // 매 이벤트마다 갱신한다. 예전엔 함수 맨 앞 16ms throttle이 이 계산 전체를 막아서, 빠르게
+            // 드래그해 놓으면 마지막 위치가 구역에 도달하기 전 값으로 남아 스냅이 스킵됐음(2026-07-22
+            // 형 리포트). HitTest는 가벼우니 매번 해도 무방하고, 무거운 오버레이 렌더링(DrawZones)만
+            // 아래에서 16ms throttle을 적용한다.
+            bool needNewOverlay = (_overlay == null || !_overlayActive || _currentMonitor?.Handle != monitor.Handle);
+            bool highlightChanged = !newHighlighted.SequenceEqual(_highlighted);
+            _highlighted = newHighlighted;
+            _currentMonitor = monitor;
+
+            if (needNewOverlay)
             {
+                // 최초 표시/모니터 전환은 중요한 상태 변화라 throttle 없이 즉시.
+                // ZoneOverlay는 하나만 만들어 재사용(Show()가 위치/크기 다시 잡음) — Hide만 하고
+                // 새로 만들던 예전 방식은 유령 창이 쌓여 871MB까지 부풀었던 누수 원인이었음.
+                var hl = newHighlighted;
                 System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                 {
-                    // 예전엔 여기서 매번 new ZoneOverlay()로 새 창을 만들고 이전 건 Hide()만 했는데,
-                    // WPF Window는 Hide해도 메모리에서 안 사라져서 드래그할 때마다(그리고 한 드래그 중
-                    // Shift 껐다 켤 때마다) 유령 오버레이 창이 계속 쌓여 램이 폭증했음(2026-07-22 발견,
-                    // 실측 871MB). ZoneOverlay는 Show()가 위치/크기를 다시 잡아주는 재사용 가능 구조라
-                    // 딱 하나만 만들어서 계속 재사용하도록 변경 — 오버레이는 앱 전체에서 최대 1개만 존재.
                     _overlay ??= new ZoneOverlay();
-                    _overlay.Show(monitor, layout, newHighlighted);
+                    _overlay.Show(monitor, layout, hl);
                     _overlayActive = true;
-                    _currentMonitor = monitor;
                     StartMouseUpWatcher();
                 });
             }
-            else if (!newHighlighted.SequenceEqual(_highlighted))
+            else if (highlightChanged)
             {
-                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
-                    _overlay?.UpdateHighlight(newHighlighted));
+                // 같은 모니터 내 하이라이트 변경만 16ms throttle (렌더링 비용 절감)
+                long now = System.Environment.TickCount64;
+                if (now - _lastLocationTick >= 16)
+                {
+                    _lastLocationTick = now;
+                    var hl = newHighlighted;
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                        _overlay?.UpdateHighlight(hl));
+                }
             }
-
-            _highlighted = newHighlighted;
         }
 
         private void OnMoveEnd(IntPtr hwnd)
