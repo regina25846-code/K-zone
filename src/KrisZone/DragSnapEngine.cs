@@ -26,6 +26,9 @@ namespace KrisZone
         private bool _draggingWindowTransparent = false;
         private long _lastLocationTick = 0;
         private DispatcherTimer? _mouseUpWatcher;
+        // 이번 드래그에서 스냅 모드(Shift 눌림 등)가 한 번이라도 유효하게 켜졌는지 —
+        // 켜졌을 때만 종료 시점 커서 위치로 스냅을 보정한다(일반 드래그는 스냅 안 함)
+        private bool _snapEligible = false;
 
         public DragSnapEngine()
         {
@@ -71,6 +74,7 @@ namespace KrisZone
         {
             _draggingHwnd = hwnd;
             _highlighted = new List<int>();
+            _snapEligible = false;
             // 투명화는 Shift 누를 때 OnLocationChange에서 처리
         }
 
@@ -122,6 +126,9 @@ namespace KrisZone
 
             var layout = ZoneManager.GetLayoutForMonitor(monitor);
             if (layout == null || layout.Zones.Count == 0) { HideOverlay(); return; }
+
+            // 스냅 모드가 유효하게 켜진 지점 — 종료 시 커서 보정 스냅을 허용
+            _snapEligible = true;
 
             double scale = monitor.ScaleFactor;
             var cursorLogical = new Point(pt.X / scale, pt.Y / scale);
@@ -185,16 +192,40 @@ namespace KrisZone
             RemoveTransparency(hwnd);
             HideOverlay();
 
-            if (hwnd != IntPtr.Zero && _highlighted.Count > 0 && _currentMonitor != null)
+            var highlighted = _highlighted;
+            var monitor = _currentMonitor;
+
+            // 드래그 중 위치 추적(OnLocationChange)에 16ms throttle이 걸려있어서, 마우스를 빨리
+            // 움직이다 놓거나 구역 경계 근처에서 놓으면 마지막 순간 _highlighted가 비어 스냅이
+            // 통째로 스킵되고 창이 놓인 자리에 그대로 남는 문제가 있었음(2026-07-22 형 리포트).
+            // 스냅 모드였는데(_snapEligible) 추적값이 비었으면, 놓는 순간 커서의 실제 위치로
+            // 구역을 다시 판정해서 그 구역에 확실히 스냅함(PowerToys FancyZones의 mouse-up 판정 방식).
+            if (highlighted.Count == 0 && _snapEligible && hwnd != IntPtr.Zero)
             {
-                var monitor = _currentMonitor;
+                NativeMethods.GetCursorPos(out var pt);
+                var m = MonitorManager.GetMonitorFromPoint(pt.X, pt.Y);
+                if (m != null)
+                {
+                    var lay = ZoneManager.GetLayoutForMonitor(m);
+                    if (lay != null && lay.Zones.Count > 0)
+                    {
+                        var cur = new Point(pt.X / m.ScaleFactor, pt.Y / m.ScaleFactor);
+                        int hit = ZoneManager.HitTest(lay, m, cur, lay.SensitivityRadius);
+                        if (hit >= 0) { highlighted = new List<int> { hit }; monitor = m; }
+                    }
+                }
+            }
+
+            if (hwnd != IntPtr.Zero && highlighted.Count > 0 && monitor != null)
+            {
                 var layout = ZoneManager.GetLayoutForMonitor(monitor);
                 if (layout != null)
                 {
-                    var highlighted = _highlighted;
+                    var snapList = highlighted;
+                    var snapMonitor = monitor;
                     System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                     {
-                        ZoneManager.SnapWindowMulti(hwnd, highlighted, layout, monitor);
+                        ZoneManager.SnapWindowMulti(hwnd, snapList, layout, snapMonitor);
                     });
                 }
             }
@@ -202,6 +233,7 @@ namespace KrisZone
             _draggingHwnd = IntPtr.Zero;
             _highlighted = new List<int>();
             _currentMonitor = null;
+            _snapEligible = false;
         }
 
         private void HideOverlay()
