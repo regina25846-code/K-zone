@@ -18,10 +18,14 @@ namespace KrisZone
             {
                 try
                 {
+                    // 이전 재생 인스턴스를 Stop만 하고 Dispose를 안 하면 SoundPlayer(IDisposable)와
+                    // 그것이 물고 있는 resource stream이 정리 안 돼서 소리 재생할 때마다 조금씩 누적됨
+                    // (2026-07-22 발견). Stop 후 Dispose까지 확실히 해준다.
                     _player?.Stop();
+                    _player?.Dispose();
                     var uri = new Uri($"pack://application:,,,/Resources/{resourceFileName}");
                     var stream = Application.GetResourceStream(uri)?.Stream;
-                    if (stream == null) return;
+                    if (stream == null) { _player = null; return; }
                     _player = new System.Media.SoundPlayer(stream);
                     _player.Play();
                 }

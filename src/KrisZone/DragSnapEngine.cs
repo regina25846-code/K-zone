@@ -148,8 +148,12 @@ namespace KrisZone
             {
                 System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                 {
-                    _overlay?.Hide();
-                    _overlay = new ZoneOverlay();
+                    // 예전엔 여기서 매번 new ZoneOverlay()로 새 창을 만들고 이전 건 Hide()만 했는데,
+                    // WPF Window는 Hide해도 메모리에서 안 사라져서 드래그할 때마다(그리고 한 드래그 중
+                    // Shift 껐다 켤 때마다) 유령 오버레이 창이 계속 쌓여 램이 폭증했음(2026-07-22 발견,
+                    // 실측 871MB). ZoneOverlay는 Show()가 위치/크기를 다시 잡아주는 재사용 가능 구조라
+                    // 딱 하나만 만들어서 계속 재사용하도록 변경 — 오버레이는 앱 전체에서 최대 1개만 존재.
+                    _overlay ??= new ZoneOverlay();
                     _overlay.Show(monitor, layout, newHighlighted);
                     _overlayActive = true;
                     _currentMonitor = monitor;
@@ -232,6 +236,8 @@ namespace KrisZone
         {
             Uninstall();
             StopMouseUpWatcher();
+            // 재사용하던 단일 오버레이도 앱 종료 시 확실히 닫아준다
+            System.Windows.Application.Current?.Dispatcher.Invoke(() => { _overlay?.Close(); _overlay = null; });
         }
     }
 }

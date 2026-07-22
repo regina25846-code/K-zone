@@ -130,5 +130,10 @@ namespace KrisZone
         // 직전 배치 결과가 아니라 그 이전 프레임의 stale한 값을 읽어올 수 있음
         [DllImport("dwmapi.dll")]
         public static extern int DwmFlush();
+
+        // Bitmap.GetHicon()이 만든 HICON 핸들 해제용 — Icon.FromHandle은 핸들 소유권을
+        // 안 가져가므로 명시적으로 DestroyIcon을 호출하지 않으면 GDI 핸들이 누수됨
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool DestroyIcon(IntPtr hIcon);
     }
 }

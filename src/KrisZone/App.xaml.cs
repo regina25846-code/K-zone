@@ -265,7 +265,7 @@ namespace KrisZone
         private static Icon PngToIcon(System.IO.Stream pngStream, int size)
         {
             using var src = System.Drawing.Image.FromStream(pngStream);
-            var bmp = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using var bmp = new Bitmap(size, size, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             using (var g = Graphics.FromImage(bmp))
             {
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
@@ -274,7 +274,18 @@ namespace KrisZone
                 g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
                 g.DrawImage(src, 0, 0, size, size);
             }
-            return Icon.FromHandle(bmp.GetHicon());
+            // GetHicon()이 만든 HICON은 Icon.FromHandle이 소유권을 안 가져가므로, 독립적인
+            // 복제본(Clone)을 반환하고 원본 HICON은 DestroyIcon으로 즉시 해제해 GDI 핸들 누수 방지
+            IntPtr hicon = bmp.GetHicon();
+            try
+            {
+                using var tmp = Icon.FromHandle(hicon);
+                return (Icon)tmp.Clone();
+            }
+            finally
+            {
+                NativeMethods.DestroyIcon(hicon);
+            }
         }
     }
 }
