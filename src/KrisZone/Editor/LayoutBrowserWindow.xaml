@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="K-Zone 레이아웃 편집기" Width="1380" Height="850"
         MinWidth="900" MinHeight="520"
-        Background="White" WindowStartupLocation="CenterScreen"
+        Background="#FCFBF9" WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        FontFamily="Segoe UI">
+        FontFamily="./Resources/Fonts/#Pretendard">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,21 +21,21 @@
             <StackPanel x:Name="MonitorPanel" Orientation="Horizontal" HorizontalAlignment="Center"/>
         </ScrollViewer>
 
-        <Rectangle Grid.Row="1" Fill="#E5E7EB"/>
+        <Rectangle Grid.Row="1" Fill="#DED9D1"/>
 
         <!-- 레이아웃 콘텐츠 -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="24,20,24,0">
             <StackPanel x:Name="ContentPanel"/>
         </ScrollViewer>
 
-        <Rectangle Grid.Row="3" Fill="#E5E7EB"/>
+        <Rectangle Grid.Row="3" Fill="#DED9D1"/>
 
         <!-- 하단 바 -->
-        <Border Grid.Row="4" Background="White" Padding="24,12">
+        <Border Grid.Row="4" Background="#FCFBF9" Padding="24,12">
             <Button x:Name="NewLayoutButton" HorizontalAlignment="Right" Click="NewLayout_Click" Cursor="Hand">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="#3B82F6" CornerRadius="6" Padding="16,9">
+                        <Border x:Name="Bd" Background="#2E4272" CornerRadius="8" Padding="16,9">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="＋" FontSize="14" FontWeight="Bold" Foreground="White"
                                            Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -44,7 +44,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2563EB"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#1E2E54"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

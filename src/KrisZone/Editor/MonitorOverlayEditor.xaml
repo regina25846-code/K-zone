@@ -3,9 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="#60000010"
+        Background="#85E6E4DF"
         Topmost="True"
         ShowInTaskbar="False"
+        FontFamily="./Resources/Fonts/#Pretendard"
         WindowStartupLocation="Manual">
 
     <Grid>
@@ -17,7 +18,7 @@
 
         <!-- Merge selection panel -->
         <Canvas x:Name="MergePanel" Background="Transparent" Visibility="Collapsed">
-            <StackPanel x:Name="MergeButtons" Orientation="Horizontal" Background="#DD111122">
+            <StackPanel x:Name="MergeButtons" Orientation="Horizontal" Background="#FCFBF9">
                 <StackPanel.Resources>
                     <Style TargetType="Button">
                         <Setter Property="Foreground" Value="White"/>
@@ -28,7 +29,7 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
@@ -36,21 +37,21 @@
                         </Setter>
                     </Style>
                 </StackPanel.Resources>
-                <Button Content="합치기" Background="#3B82F6" Click="MergeClick" Margin="0,0,4,0"/>
-                <Button Content="취소" Background="#6B7280" Click="MergeCancelClick"/>
+                <Button Content="합치기" Background="#2E4272" Click="MergeClick" Margin="0,0,4,0"/>
+                <Button Content="취소" Background="#565B65" Click="MergeCancelClick"/>
             </StackPanel>
         </Canvas>
 
         <!-- 파워토이즈 방식 인트로 팝업 (저장 전까지 유지) -->
         <Border x:Name="IntroPanel"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                Background="#F0111827" CornerRadius="12"
+                Background="#FCFBF9" BorderBrush="#DED9D1" BorderThickness="1" CornerRadius="14"
                 Padding="28,24" MinWidth="420" MaxWidth="500">
             <Border.Effect>
-                <DropShadowEffect Color="Black" BlurRadius="30" ShadowDepth="0" Opacity="0.6"/>
+                <DropShadowEffect Color="Black" BlurRadius="30" ShadowDepth="0" Opacity="0.25"/>
             </Border.Effect>
             <StackPanel>
-                <TextBlock FontSize="19" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,20"
+                <TextBlock FontSize="19" FontWeight="SemiBold" Foreground="#22252B" Margin="0,0,0,20"
                            Text="K-Zone 레이아웃 편집기"/>
 
                 <!-- 저장/취소 버튼 -->
@@ -63,13 +64,13 @@
                     <Button Grid.Column="0" Content="저장" Click="IntroSave_Click" Cursor="Hand">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="Bd" Background="#3B82F6" CornerRadius="7" Padding="0,10">
+                                <Border x:Name="Bd" Background="#2E4272" CornerRadius="8" Padding="0,10">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                                       TextElement.Foreground="White" TextElement.FontSize="17" TextElement.FontWeight="SemiBold"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#2563EB"/>
+                                        <Setter TargetName="Bd" Property="Background" Value="#1E2E54"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -78,13 +79,13 @@
                     <Button Grid.Column="2" Content="취소" Click="IntroCancel_Click" Cursor="Hand">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="Bd" Background="#374151" CornerRadius="7" Padding="0,10">
+                                <Border x:Name="Bd" Background="#FFFFFF" BorderBrush="#DED9D1" BorderThickness="1" CornerRadius="8" Padding="0,10">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                      TextElement.Foreground="White" TextElement.FontSize="17"/>
+                                                      TextElement.Foreground="#22252B" TextElement.FontSize="17"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#4B5563"/>
+                                        <Setter TargetName="Bd" Property="Background" Value="#ECE9E3"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -96,7 +97,7 @@
 
         <!-- Top HUD Bar -->
         <Border VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                Background="#E6111122" CornerRadius="0,0,10,10" Padding="14,8">
+                Background="#F0FCFBF9" BorderBrush="#DED9D1" BorderThickness="0,0,0,1" Padding="14,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -107,25 +108,26 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" x:Name="MonitorLabel"
-                           Foreground="#9CA3AF" FontSize="13" VerticalAlignment="Center"/>
+                           Foreground="#565B65" FontSize="13" VerticalAlignment="Center"/>
 
                 <TextBox Grid.Column="2" x:Name="LayoutNameBox"
-                         Background="#2A2A3E" Foreground="White"
-                         BorderBrush="#3A3A5E" Padding="8,5" FontSize="13"
+                         Background="#FFFFFF" Foreground="#22252B"
+                         BorderBrush="#DED9D1" Padding="8,5" FontSize="13"
                          TextChanged="LayoutNameBox_TextChanged"/>
 
                 <Button Grid.Column="4" Content="✕"
                         Click="Close_Click"
-                        Foreground="White" Background="#EF4444" BorderThickness="0"
+                        Foreground="#565B65" Background="#FFFFFF" BorderThickness="0"
                         Width="30" Height="30" FontSize="13" Cursor="Hand">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="15" Padding="0">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="#DED9D1" BorderThickness="1" CornerRadius="15" Padding="0">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#DC2626"/>
+                                    <Setter Property="Background" Value="#ECE9E3"/>
+                                    <Setter Property="Foreground" Value="#A94F47"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

@@ -224,8 +224,8 @@ namespace KrisZone.Editor
                 {
                     Width  = Math.Max(1, w - gap * 2),
                     Height = Math.Max(1, h - gap * 2),
-                    Background = new SolidColorBrush(Color.FromArgb(45, 0x3B, 0x82, 0xF6)),
-                    BorderBrush = new SolidColorBrush(Color.FromArgb(120, 0x60, 0xA5, 0xFA)),
+                    Background = new SolidColorBrush(Color.FromArgb(45, 0x2E, 0x42, 0x72)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(120, 0x4A, 0x5F, 0x8C)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(3),
                     Cursor = Cursors.Hand,
@@ -256,8 +256,8 @@ namespace KrisZone.Editor
                 labelPanel.Children.Add(pixelLabel);
 
                 // 존 내부에 분할선 미리보기용 Rectangle 2개 (수평/수직)
-                var splitterH = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0, 0x60, 0xA5, 0xFA)), IsHitTestVisible = false };
-                var splitterV = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0, 0x60, 0xA5, 0xFA)), IsHitTestVisible = false };
+                var splitterH = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0, 0x4A, 0x5F, 0x8C)), IsHitTestVisible = false };
+                var splitterV = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0, 0x4A, 0x5F, 0x8C)), IsHitTestVisible = false };
                 _splitters.Add((splitterH, splitterV));
 
                 var grid = new Grid();
@@ -288,7 +288,7 @@ namespace KrisZone.Editor
                 {
                     Width  = resizer.Orientation == Orientation.Vertical   ? 10 : 80,
                     Height = resizer.Orientation == Orientation.Horizontal ? 10 : 80,
-                    Background = new SolidColorBrush(Color.FromArgb(200, 0x94, 0xA3, 0xB8)),
+                    Background = new SolidColorBrush(Color.FromArgb(200, 0x8A, 0x8E, 0x97)),
                     Cursor = resizer.Orientation == Orientation.Vertical ? Cursors.SizeWE : Cursors.SizeNS,
                     Opacity = 0.8,
                     Template = BuildThumbTemplate(resizer.Orientation),
@@ -312,7 +312,7 @@ namespace KrisZone.Editor
         {
             var template = new ControlTemplate(typeof(Thumb));
             var factory = new FrameworkElementFactory(typeof(Border));
-            factory.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromArgb(200, 0x94, 0xA3, 0xB8)));
+            factory.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromArgb(200, 0x8A, 0x8E, 0x97)));
             factory.SetValue(Border.CornerRadiusProperty, new CornerRadius(5));
             template.VisualTree = factory;
             return template;
@@ -484,7 +484,7 @@ namespace KrisZone.Editor
 
             if (vertical)
             {
-                sv.Fill = new SolidColorBrush(Color.FromArgb(100, 0x60, 0xA5, 0xFA));
+                sv.Fill = new SolidColorBrush(Color.FromArgb(100, 0x4A, 0x5F, 0x8C));
                 sv.Width = 3;
                 sv.Height = border.Height;
                 sv.HorizontalAlignment = HorizontalAlignment.Left;
@@ -495,7 +495,7 @@ namespace KrisZone.Editor
             }
             else
             {
-                sh.Fill = new SolidColorBrush(Color.FromArgb(100, 0x60, 0xA5, 0xFA));
+                sh.Fill = new SolidColorBrush(Color.FromArgb(100, 0x4A, 0x5F, 0x8C));
                 sh.Height = 3;
                 sh.Width = border.Width;
                 sh.VerticalAlignment = VerticalAlignment.Top;
@@ -648,8 +648,8 @@ namespace KrisZone.Editor
             if (zi >= Preview.Children.Count) return;
             var border = (Border)Preview.Children[zi];
             border.Background = selected
-                ? new SolidColorBrush(Color.FromArgb(90, 0x93, 0xC5, 0xFD))
-                : new SolidColorBrush(Color.FromArgb(45, 0x3B, 0x82, 0xF6));
+                ? new SolidColorBrush(Color.FromArgb(90, 0x7C, 0x8F, 0xBD))
+                : new SolidColorBrush(Color.FromArgb(45, 0x2E, 0x42, 0x72));
         }
 
         private List<int> GetSelectedZoneIndices()

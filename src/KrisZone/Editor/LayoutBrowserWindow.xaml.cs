@@ -16,14 +16,13 @@ namespace KrisZone.Editor
         private MonitorInfo? _selectedMonitor;
         private int _selectedMonitorIndex = 0;
 
-        private static readonly Color AccentColor  = Color.FromRgb(0x00, 0x78, 0xD4);
-        private static readonly Color DarkColor    = Color.FromRgb(0x11, 0x18, 0x27);
-        private static readonly Color GrayColor    = Color.FromRgb(0x6B, 0x72, 0x80);
-        private static readonly Color LineGray     = Color.FromRgb(0xE5, 0xE7, 0xEB);
-        private static readonly Color AccentBg     = Color.FromRgb(0xE5, 0xF2, 0xFB);
+        private static readonly Color AccentColor  = Color.FromRgb(0x2E, 0x42, 0x72);
+        private static readonly Color DarkColor    = Color.FromRgb(0x22, 0x25, 0x2B);
+        private static readonly Color GrayColor    = Color.FromRgb(0x56, 0x5B, 0x65);
+        private static readonly Color LineGray     = Color.FromRgb(0xDE, 0xD9, 0xD1);
+        private static readonly Color AccentBg     = Color.FromRgb(0xEA, 0xEC, 0xF3);
 
-        private const string FontBold   = "KoPubWorld Dotum";
-        private const string FontMedium = "KoPubWorld Dotum";
+        private static readonly FontFamily UiFont = UiFonts.Pretendard;
 
         public LayoutBrowserWindow()
         {
@@ -89,14 +88,14 @@ namespace KrisZone.Editor
             sp.Children.Add(new TextBlock
             {
                 Text = idx.ToString(), FontSize = 32, FontWeight = FontWeights.Bold,
-                FontFamily = new FontFamily(FontBold),
+                FontFamily = UiFont,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Foreground = selected ? accent : dark,
             });
             sp.Children.Add(new TextBlock
             {
                 Text = $"{(int)monW} × {(int)monH}",
-                FontSize = 13, FontFamily = new FontFamily(FontMedium),
+                FontSize = 13, FontFamily = UiFont,
                 Foreground = gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 2, 0, 0),
@@ -105,7 +104,7 @@ namespace KrisZone.Editor
             sp.Children.Add(new TextBlock
             {
                 Text = "100%", FontSize = 13,
-                FontFamily = new FontFamily(FontMedium),
+                FontFamily = UiFont,
                 Foreground = selected ? accent : gray,
                 HorizontalAlignment = HorizontalAlignment.Center,
             });
@@ -114,7 +113,7 @@ namespace KrisZone.Editor
             {
                 Width = tabWidth, MinHeight = 100,
                 Padding = new Thickness(10, 14, 10, 14),
-                Background = selected ? new SolidColorBrush(Color.FromRgb(0xF0, 0xF8, 0xFF)) : Brushes.White,
+                Background = selected ? new SolidColorBrush(AccentBg) : Brushes.White,
                 BorderBrush = selected ? accent : lineGray,
                 BorderThickness = new Thickness(selected ? 2 : 1),
                 CornerRadius = new CornerRadius(6),
@@ -156,7 +155,7 @@ namespace KrisZone.Editor
         private static TextBlock SectionHeader(string text, double topMargin = 0) => new TextBlock
         {
             Text = text, FontSize = 24, FontWeight = FontWeights.Bold,
-            FontFamily = new FontFamily(FontBold),
+            FontFamily = UiFont,
             Foreground = new SolidColorBrush(DarkColor),
             Margin = new Thickness(0, topMargin, 0, 16),
         };
@@ -171,7 +170,7 @@ namespace KrisZone.Editor
         {
             var accent    = new SolidColorBrush(AccentColor);
             var lineGray  = new SolidColorBrush(LineGray);
-            var hoverLine = new SolidColorBrush(Color.FromRgb(0x93, 0xC5, 0xFD));
+            var hoverLine = new SolidColorBrush(Color.FromRgb(0x8C, 0x9C, 0xC2));
 
             var card = new Border
             {
@@ -197,7 +196,7 @@ namespace KrisZone.Editor
             var nameText = new TextBlock
             {
                 Text = layout.Name, FontSize = 15, FontWeight = FontWeights.SemiBold,
-                FontFamily = new FontFamily(FontMedium),
+                FontFamily = UiFont,
                 Foreground = new SolidColorBrush(DarkColor),
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
