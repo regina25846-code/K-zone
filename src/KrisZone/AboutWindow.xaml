@@ -7,7 +7,7 @@
         ShowInTaskbar="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Width="320" Height="360"
+        Width="320" SizeToContent="Height"
         WindowStartupLocation="CenterScreen">
     <Border Background="#FFFFFF" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="14">
         <Border.Effect>
@@ -79,7 +79,33 @@
                 </TextBlock>
 
                 <!-- 저작권 -->
-                <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#AAAAAA"/>
+                <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,18"/>
+
+                <!-- 업데이트 -->
+                <Button x:Name="UpdateBtn" Content="다운로드 페이지 열기" Click="UpdateBtn_Click" Cursor="Hand"
+                        Padding="16,7" HorizontalAlignment="Center"
+                        Background="#ECECEA" Foreground="#333333" FontSize="12" FontWeight="SemiBold"
+                        BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="UBd" Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="UBd" Property="Background" Value="#E0E0DD"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <TextBlock Text="최신 버전은 다운로드 페이지에서 확인하세요" FontSize="11" Foreground="#AAAAAA" Margin="0,8,0,0"/>
             </StackPanel>
         </Grid>
     </Border>
