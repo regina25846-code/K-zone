@@ -51,7 +51,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "K-Zone 실행"; Flags: nowait p
 [Code]
 // K-앱 공통 설치 흐름 표준 5단계 (2026-07-19 확정, K-Clock 기준) 적용:
 //  1) 이미 설치돼있으면 실행 시 제거/유지 선택
-//  2) 제거 선택 시 애플리케이션 데이터 삭제 여부 확인(기본은 삭제 안 함)
+//  2) 제거 선택 시 애플리케이션 데이터 삭제 여부 확인(체크박스, 기본 체크 해제)
 //  3) 프로그램 실행 중이면 종료 확인창
 //  4) 설치 위치 표시 (Inno 기본 DirPage — 별도 설정 불필요)
 //  5) 완료 화면에 프로그램 실행 + 바탕화면 바로가기 체크란 ([Run]/[Tasks]에 이미 있음)
@@ -129,15 +129,67 @@ begin
   end;
 end;
 
-// 2단계: 제거 완료 시점에 애플리케이션 데이터 삭제 여부 확인(기본은 [아니오] = 보존)
+// 2단계: 애플리케이션 데이터 삭제 여부를 체크박스(기본 체크 해제)로 확인.
+// 예/아니오 팝업이었던 걸 K-Clock과 같은 체크박스 방식으로 통일(2026-08-04 형 요청).
+// Inno 기본 "정말 제거하시겠습니까?" 확인창은 InitializeUninstall 직후에 뜨므로, 우리
+// 체크박스 창을 거기 겹치게 InitializeUninstall에서 띄우면 확인창이 연달아 두 번 뜬다
+// (2026-08-04 오푸스 리뷰 지적). 그래서 기본 확인창 다음 단계인 usUninstall에서 띄운다.
+var
+  DeleteDataOnUninstall: Boolean;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Form: TSetupForm;
+  Lbl: TNewStaticText;
+  ChkDeleteData: TNewCheckBox;
+  BtnOK: TNewButton;
 begin
-  if CurUninstallStep = usPostUninstall then
+  if CurUninstallStep = usUninstall then
   begin
-    if MsgBox('설치 대상과 함께 K-Zone 설정 데이터(레이아웃, 환경설정 등)도 삭제하시겠습니까?'#13#10#13#10'[아니오]를 선택하면 데이터는 보존됩니다.',
-       mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
-    begin
-      DelTree(ExpandConstant('{localappdata}\K-Zone'), True, True, True);
+    DeleteDataOnUninstall := False;
+    // Inno Setup 6.6.0부터 CreateCustomForm이 크기 인자를 받는 형태로 바뀌었다
+    // (2026-08-04 오푸스 리뷰가 실제 Inno 소스 대조로 확인) — 인자 없이 부르면 CI 빌드 자체가 깨짐.
+    Form := CreateCustomForm(ScaleX(380), ScaleY(190), False, True);
+    try
+      Form.Caption := 'K-Zone 제거';
+      Form.Position := poScreenCenter;
+
+      Lbl := TNewStaticText.Create(Form);
+      Lbl.Parent := Form;
+      Lbl.Left := ScaleX(16);
+      Lbl.Top := ScaleY(16);
+      Lbl.Width := Form.ClientWidth - ScaleX(32);
+      Lbl.AutoSize := False;
+      Lbl.Height := ScaleY(56);
+      Lbl.WordWrap := True;
+      Lbl.Caption := 'K-Zone을 제거합니다.'#13#10'아래 항목을 선택하지 않으면 설정 데이터(레이아웃, 환경설정 등)는 보존됩니다.';
+
+      ChkDeleteData := TNewCheckBox.Create(Form);
+      ChkDeleteData.Parent := Form;
+      ChkDeleteData.Left := ScaleX(16);
+      ChkDeleteData.Top := ScaleY(88);
+      ChkDeleteData.Width := Form.ClientWidth - ScaleX(32);
+      ChkDeleteData.Height := ScaleY(17);
+      ChkDeleteData.Caption := '설치 대상과 애플리케이션 데이터 삭제';
+      ChkDeleteData.Checked := False;
+
+      BtnOK := TNewButton.Create(Form);
+      BtnOK.Parent := Form;
+      BtnOK.Width := ScaleX(75);
+      BtnOK.Height := ScaleY(23);
+      BtnOK.Left := Form.ClientWidth - ScaleX(16) - BtnOK.Width;
+      BtnOK.Top := Form.ClientHeight - ScaleY(16) - BtnOK.Height;
+      BtnOK.Caption := '확인';
+      BtnOK.ModalResult := mrOk;
+      BtnOK.Default := True;
+
+      Form.ActiveControl := BtnOK;
+      Form.ShowModal();
+      DeleteDataOnUninstall := ChkDeleteData.Checked;
+    finally
+      Form.Free;
     end;
-  end;
+  end
+  else if (CurUninstallStep = usPostUninstall) and DeleteDataOnUninstall then
+    DelTree(ExpandConstant('{localappdata}\K-Zone'), True, True, True);
 end;

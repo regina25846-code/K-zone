@@ -15,6 +15,9 @@ namespace KrisZone
         private HotkeyEngine? _hotkeys;
         private AlwaysOnTopEngine? _alwaysOnTop;
         private System.Threading.Mutex? _singleInstanceMutex;
+        private LayoutBrowserWindow? _layoutBrowserWindow;
+        private SettingsWindow? _settingsWindow;
+        private AboutWindow? _aboutWindow;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -186,19 +189,38 @@ namespace KrisZone
         {
             Dispatcher.Invoke(() =>
             {
-                var w = new AboutWindow();
-                w.Show();
-                w.Activate();
+                if (_aboutWindow != null)
+                {
+                    if (_aboutWindow.WindowState == WindowState.Minimized)
+                        _aboutWindow.WindowState = WindowState.Normal;
+                    _aboutWindow.Activate();
+                    return;
+                }
+                _aboutWindow = new AboutWindow();
+                _aboutWindow.Closed += (_, _) => _aboutWindow = null;
+                _aboutWindow.Show();
+                _aboutWindow.Activate();
             });
         }
 
         private void OpenLayoutBrowser()
         {
+            // 트레이 아이콘 클릭할 때마다 매번 새 창을 만들어서 계속 누르면 창이
+            // 무한정 쌓였다(2026-08-04 형이 실제 재현) — 이미 열려있으면 그 창을
+            // 앞으로 가져오기만 하도록 수정.
             Dispatcher.Invoke(() =>
             {
-                var w = new LayoutBrowserWindow();
-                w.Show();
-                w.Activate();
+                if (_layoutBrowserWindow != null)
+                {
+                    if (_layoutBrowserWindow.WindowState == WindowState.Minimized)
+                        _layoutBrowserWindow.WindowState = WindowState.Normal;
+                    _layoutBrowserWindow.Activate();
+                    return;
+                }
+                _layoutBrowserWindow = new LayoutBrowserWindow();
+                _layoutBrowserWindow.Closed += (_, _) => _layoutBrowserWindow = null;
+                _layoutBrowserWindow.Show();
+                _layoutBrowserWindow.Activate();
             });
         }
 
@@ -217,9 +239,17 @@ namespace KrisZone
         {
             Dispatcher.Invoke(() =>
             {
-                var w = new SettingsWindow();
-                w.Show();
-                w.Activate();
+                if (_settingsWindow != null)
+                {
+                    if (_settingsWindow.WindowState == WindowState.Minimized)
+                        _settingsWindow.WindowState = WindowState.Normal;
+                    _settingsWindow.Activate();
+                    return;
+                }
+                _settingsWindow = new SettingsWindow();
+                _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+                _settingsWindow.Show();
+                _settingsWindow.Activate();
             });
         }
 
