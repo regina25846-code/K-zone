@@ -15,6 +15,7 @@ namespace KrisZone.Editor
     {
         private MonitorInfo? _selectedMonitor;
         private int _selectedMonitorIndex = 0;
+        private Border? _activeCard;
 
         private static readonly Color AccentColor  = Color.FromRgb(0x2E, 0x42, 0x72);
         private static readonly Color DarkColor    = Color.FromRgb(0x22, 0x25, 0x2B);
@@ -225,14 +226,30 @@ namespace KrisZone.Editor
             outer.Children.Add(preview);
             card.Child = outer;
 
+            if (selected) _activeCard = card;
+
             var layoutRef = layout;
             editBtn.Click += (s, e) => { e.Handled = true; OpenEditorForLayout(layoutRef); };
-            card.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) ApplyLayout(layoutRef); };
-            if (!selected)
+            // 한 번 클릭하면 적용은 안 하고 선택 표시(테두리/배경)만 그 카드로 옮긴다 —
+            // 이전엔 더블클릭으로 실제 적용될 때만 표시가 바뀌어서, 한 번 클릭해도 선택
+            // 사각박스가 그대로였다(2026-08-04 형이 실제 재현). 더블클릭은 그대로 적용까지 함.
+            card.MouseLeftButtonDown += (_, e) =>
             {
-                card.MouseEnter += (_, _) => card.BorderBrush = hoverLine;
-                card.MouseLeave += (_, _) => card.BorderBrush = lineGray;
-            }
+                if (e.ClickCount == 2) { ApplyLayout(layoutRef); return; }
+                if (_activeCard == card) return;
+                if (_activeCard != null)
+                {
+                    _activeCard.Background = Brushes.White;
+                    _activeCard.BorderBrush = lineGray;
+                    _activeCard.BorderThickness = new Thickness(1);
+                }
+                card.Background = new SolidColorBrush(AccentBg);
+                card.BorderBrush = accent;
+                card.BorderThickness = new Thickness(2);
+                _activeCard = card;
+            };
+            card.MouseEnter += (_, _) => { if (_activeCard != card) card.BorderBrush = hoverLine; };
+            card.MouseLeave += (_, _) => { if (_activeCard != card) card.BorderBrush = lineGray; };
 
             {
                 var menu = new ContextMenu();

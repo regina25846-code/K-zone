@@ -32,7 +32,6 @@ MinVersion=10.0
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "바탕화면 바로가기 만들기"; GroupDescription: "추가 옵션:"
 Name: "startupentry"; Description: "Windows 시작 시 자동 실행"; GroupDescription: "추가 옵션:"; Flags: unchecked
 
 [Files]
@@ -40,7 +39,6 @@ Source: "publish\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: startupentry
@@ -54,7 +52,9 @@ Filename: "{app}\{#MyAppExeName}"; Description: "K-Zone 실행"; Flags: nowait p
 //  2) 제거 선택 시 애플리케이션 데이터 삭제 여부 확인(체크박스, 기본 체크 해제)
 //  3) 프로그램 실행 중이면 종료 확인창
 //  4) 설치 위치 표시 (Inno 기본 DirPage — 별도 설정 불필요)
-//  5) 완료 화면에 프로그램 실행 + 바탕화면 바로가기 체크란 ([Run]/[Tasks]에 이미 있음)
+//  5) 완료 화면에 프로그램 실행([Run] 기본 제공) + 바탕화면 바로가기 체크란(아래 커스텀 컨트롤,
+//     기본 체크) — 바탕화면 바로가기는 원래 그보다 앞 단계인 "추가 작업 선택" 화면의
+//     [Tasks] 항목이었는데, 표준 문서상 완료 화면에 있어야 해서 옮김(2026-08-04 형 확인).
 
 const
   // AppId({{7A2F4B1C-...})에 대응하는 Inno 언인스톨 레지스트리 키. PrivilegesRequired=lowest라 HKCU.
@@ -129,6 +129,46 @@ begin
   end;
 end;
 
+// 5단계 보조: 완료 화면에 "바탕화면에 바로가기 만들기" 체크박스를 직접 그려 넣는다.
+// Inno의 [Tasks]는 완료 화면이 아니라 그 앞 "추가 작업 선택" 화면에 뜨므로, 완료 화면에
+// 놓으려면 [Icons]로 선언하는 대신 여기서 WScript.Shell로 직접 바로가기를 만든다.
+var
+  FinishDesktopCheck: TNewCheckBox;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpFinished then
+  begin
+    // RunList가 완료 페이지 바닥까지 고정폭(항목 1개짜리 [Run]엔 과한 높이)을 차지하고 있어서
+    // 그 아래에 그냥 이어붙이면 페이지 밖으로 밀려나 안 보인다(2026-08-04 오푸스가 Inno 원본
+    // .dfm 좌표까지 대조해서 확인) — RunList 자체를 줄이고 그 자리에 체크박스를 넣는다.
+    WizardForm.RunList.Height := WizardForm.RunList.Height - ScaleY(25);
+    FinishDesktopCheck := TNewCheckBox.Create(WizardForm);
+    FinishDesktopCheck.Parent := WizardForm.FinishedPage;
+    FinishDesktopCheck.Left := WizardForm.RunList.Left;
+    FinishDesktopCheck.Top := WizardForm.RunList.Top + WizardForm.RunList.Height + ScaleY(8);
+    FinishDesktopCheck.Width := WizardForm.RunList.Width;
+    FinishDesktopCheck.Height := ScaleY(17);
+    FinishDesktopCheck.Caption := '바탕화면에 바로가기 만들기';
+    FinishDesktopCheck.Checked := True;
+  end;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  WshShell, Shortcut: Variant;
+begin
+  Result := True;
+  if (CurPageID = wpFinished) and (FinishDesktopCheck <> nil) and FinishDesktopCheck.Checked then
+  begin
+    WshShell := CreateOleObject('WScript.Shell');
+    Shortcut := WshShell.CreateShortcut(ExpandConstant('{autodesktop}\{#MyAppName}.lnk'));
+    Shortcut.TargetPath := ExpandConstant('{app}\{#MyAppExeName}');
+    Shortcut.WorkingDirectory := ExpandConstant('{app}');
+    Shortcut.Save;
+  end;
+end;
+
 // 2단계: 애플리케이션 데이터 삭제 여부를 체크박스(기본 체크 해제)로 확인.
 // 예/아니오 팝업이었던 걸 K-Clock과 같은 체크박스 방식으로 통일(2026-08-04 형 요청).
 // Inno 기본 "정말 제거하시겠습니까?" 확인창은 InitializeUninstall 직후에 뜨므로, 우리
@@ -190,6 +230,12 @@ begin
       Form.Free;
     end;
   end
-  else if (CurUninstallStep = usPostUninstall) and DeleteDataOnUninstall then
-    DelTree(ExpandConstant('{localappdata}\K-Zone'), True, True, True);
+  else if CurUninstallStep = usPostUninstall then
+  begin
+    // 바탕화면 바로가기는 이제 [Icons]가 아니라 완료 화면에서 스크립트로 직접 만들기 때문에
+    // Inno의 자동 제거 대상이 아니다 — 여기서 직접 지운다(있으면).
+    DeleteFile(ExpandConstant('{autodesktop}\{#MyAppName}.lnk'));
+    if DeleteDataOnUninstall then
+      DelTree(ExpandConstant('{localappdata}\K-Zone'), True, True, True);
+  end;
 end;
