@@ -102,17 +102,27 @@ begin
 end;
 
 // 3단계: 파일 복사 직전, 실행 중이면 종료 확인 후 강제 종료(트레이 상주라 RestartManager가 못 잡음)
+// 0.6초 한 번만 기다리고 넘어가면, 안티바이러스 스캔 지연이나 무언가가 곧바로 재실행시키는
+// 경우 파일 핸들이 아직 안 풀려서 DeleteFile 액세스 거부로 설치가 깨졌다(2026-08-04 형이 실제
+// 재현). 죽었는지 다시 확인하면서 여러 번 재시도하도록 강화한다.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
-  code: Integer;
+  code, attempt: Integer;
 begin
   Result := '';
   if IsAppRunning() then
   begin
     if MsgBox('K-Zone이 실행 중입니다.'#13#10'종료하고 설치를 계속하시겠습니까?', mbConfirmation, MB_YESNO) = IDYES then
     begin
-      Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName} /T', '', SW_HIDE, ewWaitUntilTerminated, code);
-      Sleep(600); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
+      attempt := 0;
+      while IsAppRunning() and (attempt < 5) do
+      begin
+        Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName} /T', '', SW_HIDE, ewWaitUntilTerminated, code);
+        Sleep(800); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
+        attempt := attempt + 1;
+      end;
+      if IsAppRunning() then
+        Result := 'K-Zone을 종료하지 못했습니다.'#13#10'프로그램을 직접 종료한 후 설치를 다시 실행해 주세요.';
     end
     else
       Result := '설치가 취소되었습니다. K-Zone을 종료한 후 다시 시도해 주세요.';
