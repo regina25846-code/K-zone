@@ -88,11 +88,15 @@ begin
   uninst := GetUninstallString();
   if uninst <> '' then
   begin
-    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 제거 후, Setup을 다시 실행해 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
+    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 제거 후 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
        mbConfirmation, MB_YESNO) = IDYES then
     begin
-      // 언인스톨러를 UI와 함께 실행 → 그 안에서 2단계(데이터 삭제 확인)까지 이어짐. 끝나면 설치는 중단.
+      // 언인스톨러를 UI와 함께 실행 → 그 안에서 2단계(데이터 삭제 확인)까지 이어짐. 끝나면
+      // 이 Setup.exe 자신을 자동으로 다시 실행해서 새로 설치까지 이어감 — 예전엔 여기서
+      // 그냥 종료돼서 형이 Setup.exe를 수동으로 다시 눌러야 했음(2026-08-06 지적, "지워지기만
+      // 하고 설치까지 자동으로 안 되는데"). ewNoWait로 띄우고 이 인스턴스는 바로 종료.
       Exec(RemoveQuotes(uninst), '', '', SW_SHOW, ewWaitUntilTerminated, code);
+      Exec(ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code);
       Result := False;
     end;
   end;
@@ -137,8 +141,22 @@ begin
         Sleep(1100); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
         attempt := attempt + 1;
       end;
+      // 그래도 안 죽으면 관리자 권한으로 실행 중인 K-Zone일 가능성이 큼(2026-08-06 형이 실기로
+      // "관리자 권한으로 Setup을 실행하니 된다"고 확인해서 확정) — 이미 관리자 권한으로 이
+      // Setup 자신이 떠있는 상태(IsAdmin)면 그것도 못 끄는 거니 더 물어볼 것 없이 안내만 하고,
+      // 아직 일반 권한이면 이 Setup 자신을 관리자 권한으로 재시작해서 자동으로 한 번 더 시도.
       if IsAppRunning() then
-        Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.'#13#10'(관리자 권한으로 실행 중인 K-Zone은 이 설치 프로그램이 대신 종료할 수 없습니다)';
+      begin
+        if IsAdmin() then
+          Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.'
+        else if MsgBox('일반 권한으로는 K-Zone을 종료할 수 없습니다(관리자 권한으로 실행 중일 수 있습니다).'#13#10'관리자 권한으로 설치 프로그램을 다시 시작하시겠습니까?', mbConfirmation, MB_YESNO) = IDYES then
+        begin
+          ShellExec('runas', ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code);
+          Result := '관리자 권한으로 설치 프로그램을 다시 실행합니다. 이 창은 닫아주세요.';
+        end
+        else
+          Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.';
+      end;
     end
     else
       Result := '설치가 취소되었습니다. K-Zone을 종료한 후 다시 시도해 주세요.';
