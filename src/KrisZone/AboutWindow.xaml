@@ -82,7 +82,7 @@
                 <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,18"/>
 
                 <!-- 업데이트 -->
-                <Button x:Name="UpdateBtn" Content="다운로드 페이지 열기" Click="UpdateBtn_Click" Cursor="Hand"
+                <Button x:Name="UpdateBtn" Content="업데이트 확인" Click="UpdateBtn_Click" Cursor="Hand"
                         Padding="16,7" HorizontalAlignment="Center"
                         Background="#ECECEA" Foreground="#333333" FontSize="12" FontWeight="SemiBold"
                         BorderThickness="0">
@@ -105,7 +105,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <TextBlock Text="최신 버전은 다운로드 페이지에서 확인하세요" FontSize="11" Foreground="#AAAAAA" Margin="0,8,0,0"/>
+                <TextBlock x:Name="StatusText" Text="" FontSize="11" Foreground="#AAAAAA" Margin="0,8,0,0"/>
             </StackPanel>
         </Grid>
     </Border>

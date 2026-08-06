@@ -11,6 +11,7 @@ namespace KrisZone
     public partial class App : System.Windows.Application
     {
         private NotifyIcon? _trayIcon;
+        private NativePopupMenu? _trayMenu;
         private DragSnapEngine? _engine;
         private HotkeyEngine? _hotkeys;
         private AlwaysOnTopEngine? _alwaysOnTop;
@@ -70,6 +71,7 @@ namespace KrisZone
             _hotkeys?.Dispose();
             _alwaysOnTop?.Dispose();
             _trayIcon?.Dispose();
+            _trayMenu?.Dispose();
             base.OnExit(e);
         }
 
@@ -158,31 +160,30 @@ namespace KrisZone
 
         private void BuildTray()
         {
-            var autoStartItem = new ToolStripMenuItem("시작 프로그램 등록")
-            {
-                Checked = IsAutoStartEnabled(),
-                CheckOnClick = true
-            };
-            autoStartItem.Click += (_, _) => SetAutoStart(autoStartItem.Checked);
-
-            var menu = new ContextMenuStrip();
-            menu.Items.Add("K-Zone 레이아웃 편집기", null, (_, _) => OpenLayoutBrowser());
-            menu.Items.Add("설정", null, (_, _) => OpenSettings());
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(autoStartItem);
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("프로그램 정보", null, (_, _) => OpenAboutWindow());
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("종료", null, (_, _) => { Current.Shutdown(); });
+            _trayMenu = new NativePopupMenu();
 
             _trayIcon = new NotifyIcon
             {
                 Icon = GetTrayIcon(),
                 Text = "K-Zone",
                 Visible = true,
-                ContextMenuStrip = menu
             };
             _trayIcon.DoubleClick += (_, _) => OpenLayoutBrowser();
+            _trayIcon.MouseUp += (_, e) =>
+            {
+                if (e.Button != MouseButtons.Right) return;
+                _trayMenu.Show(new[]
+                {
+                    NativePopupMenu.Item.Entry("K-Zone 레이아웃 편집기", OpenLayoutBrowser),
+                    NativePopupMenu.Item.Entry("설정", OpenSettings),
+                    NativePopupMenu.Item.Separator(),
+                    NativePopupMenu.Item.Entry("시작 프로그램 등록", () => SetAutoStart(!IsAutoStartEnabled()), IsAutoStartEnabled()),
+                    NativePopupMenu.Item.Separator(),
+                    NativePopupMenu.Item.Entry("프로그램 정보", OpenAboutWindow),
+                    NativePopupMenu.Item.Separator(),
+                    NativePopupMenu.Item.Entry("종료", () => Current.Shutdown()),
+                });
+            };
         }
 
         private void OpenAboutWindow()
