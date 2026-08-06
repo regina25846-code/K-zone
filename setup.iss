@@ -101,9 +101,13 @@ begin
       // 언인스톨러를 UI와 함께 실행 → 그 안에서 2단계(데이터 삭제 확인)까지 이어짐. 끝나면
       // 이 Setup.exe 자신을 자동으로 다시 실행해서 새로 설치까지 이어감 — 예전엔 여기서
       // 그냥 종료돼서 형이 Setup.exe를 수동으로 다시 눌러야 했음(2026-08-06 지적, "지워지기만
-      // 하고 설치까지 자동으로 안 되는데"). ewNoWait로 띄우고 이 인스턴스는 바로 종료.
+      // 하고 설치까지 자동으로 안 되는데"). 2026-08-06 재발견: Exec(원시 CreateProcess)로
+      // 재실행하면 관리자 권한 매니페스트가 있는 exe를 조용히 못 띄우는 경우가 있어서
+      // "삭제만 되고 설치는 안 됨" 재현됨 — ShellExec(셸의 표준 실행 경로, 매니페스트의
+      // 관리자 권한 요구를 제대로 처리)로 교체하고 실패 시 안내 메시지도 추가.
       Exec(RemoveQuotes(uninst), '', '', SW_SHOW, ewWaitUntilTerminated, code);
-      Exec(ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code);
+      if not ShellExec('', ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code) then
+        MsgBox('설치 프로그램을 다시 시작하지 못했습니다.'#13#10'Setup.exe를 다시 눌러 새로 설치해 주세요.', mbError, MB_OK);
       Result := False;
     end;
   end;
