@@ -51,6 +51,13 @@ jobs:
         with:
           tag_name: v${{ steps.ver.outputs.version }}
           name: K-Zone v${{ steps.ver.outputs.version }}
+          # 버전 문자열에 하이픈(테스트빌드, 예: 1.2.1-1)이 있으면 자동으로 prerelease 처리 —
+          # 이 플래그가 없으면 /releases/latest API가 테스트빌드를 "최신 정식버전"으로 잘못
+          # 돌려줘서, 앞으로 추가되는 인앱 자동업데이트 기능이 테스트빌드를 정식판으로 착각해서
+          # 배포해버릴 위험이 있음(2026-08-06, v1.2.1-1 배포 직후 이 워크플로에 원래
+          # prerelease 로직 자체가 없었다는 걸 실측으로 발견 — 이전 -N 릴리즈들의 Pre-release
+          # 표시는 매번 사람이 수동으로 gh release edit --prerelease 해줬던 것이었음).
+          prerelease: ${{ contains(steps.ver.outputs.version, '-') }}
           files: |
             publish/K-Zone.exe
             installer/K-Zone.Setup.${{ steps.ver.outputs.version }}.exe
