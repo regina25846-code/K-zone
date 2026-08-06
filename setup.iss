@@ -72,7 +72,11 @@ Filename: "{app}\{#MyAppExeName}"; Description: "K-Zone 실행"; Flags: nowait p
 //     [Tasks] 항목이었는데, 표준 문서상 완료 화면에 있어야 해서 옮김(2026-08-04 형 확인).
 
 const
-  // AppId({{7A2F4B1C-...})에 대응하는 Inno 언인스톨 레지스트리 키. PrivilegesRequired=lowest라 HKCU.
+  // AppId({{7A2F4B1C-...})에 대응하는 Inno 언인스톨 레지스트리 키.
+  // 2026-08-06: PrivilegesRequired=admin으로 바꾼 뒤부터 Inno가 이 키를 HKCU가 아니라 HKLM에
+  // 쓴다(Inno 6.7.1 소스 Setup.Install.pas의 RootKey := InstallModeRootKey 확인). 예전
+  // lowest 시절에 설치된 버전은 아직 HKCU에 남아있을 수 있으므로 아래 GetUninstallString은
+  // HKCU → HKLM 순서로 둘 다 조회한다. 둘 중 어느 쪽을 찾아도 제거는 정상 동작한다.
   UninstallRegKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7A2F4B1C-9E3D-4F6A-B8C2-1D5E7F9A3B6C}_is1';
 
 function GetUninstallString(): String;
@@ -95,20 +99,45 @@ begin
   uninst := GetUninstallString();
   if uninst <> '' then
   begin
-    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 제거 후 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
+    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 기존 버전을 완전히 제거한 뒤, 이어서 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
        mbConfirmation, MB_YESNO) = IDYES then
     begin
-      // 언인스톨러를 UI와 함께 실행 → 그 안에서 2단계(데이터 삭제 확인)까지 이어짐. 끝나면
-      // 이 Setup.exe 자신을 자동으로 다시 실행해서 새로 설치까지 이어감 — 예전엔 여기서
-      // 그냥 종료돼서 형이 Setup.exe를 수동으로 다시 눌러야 했음(2026-08-06 지적, "지워지기만
-      // 하고 설치까지 자동으로 안 되는데"). 2026-08-06 재발견: Exec(원시 CreateProcess)로
-      // 재실행하면 관리자 권한 매니페스트가 있는 exe를 조용히 못 띄우는 경우가 있어서
-      // "삭제만 되고 설치는 안 됨" 재현됨 — ShellExec(셸의 표준 실행 경로, 매니페스트의
-      // 관리자 권한 요구를 제대로 처리)로 교체하고 실패 시 안내 메시지도 추가.
+      // ── 2026-08-06 원인 규명 (Inno Setup 6.7.1 소스 대조로 확정) ──────────────────
+      // 여기서 Setup.exe 자신({srcexe})을 다시 실행하려던 두 번의 시도가 실패한 진짜 이유:
+      // Inno가 의도적으로 막고 있다. Setup.ScriptFunc.pas의 Exec/ShellExec 구현은 매번
+      //     if not IsProtectedSrcExe(Filename) then <실행> else <False + ERROR_ACCESS_DENIED>
+      // 를 거치는데, Setup.ScriptFunc.HelperFunc.pas의 IsProtectedSrcExe는
+      //     (MainForm = nil) or (MainForm.CurStep < ssInstall) 인 동안
+      //     PathExpand(Filename) = SetupLdrOriginalFilename({srcexe}) 이면 True
+      // 를 반환한다. InitializeSetup 시점엔 MainForm이 아직 nil이므로 조건이 100% 성립 →
+      // CreateProcess/ShellExecuteEx를 아예 호출조차 하지 않고 그냥 실패시킨다.
+      // 그래서 Exec판은 반환값을 안 봐서 "아무 일도 안 일어남", ShellExec판은 False가
+      // 돌아와서 에러 메시지가 떴던 것. UAC도, SFX 임시폴더도, 파일 잠금도 원인이 아니었다
+      // (SetupLdr은 Setup.tmp를 띄우기 전에 이미 FreeAndNil(SourceF)로 원본 핸들을 닫는다).
+      // ErrorCode를 찍어봤다면 5(ERROR_ACCESS_DENIED)가 나왔을 것이고, 재실행 방식으로는
+      // 어떤 인자를 줘도 이 단계에선 통과할 수 없다.
+      //
+      // ── 그래서 재실행을 아예 없앴다 ─────────────────────────────────────────────
+      // 제거를 끝낸 뒤 Setup.exe를 새로 띄울 이유가 애초에 없다. InitializeSetup 시점엔 이
+      // 설치 프로그램이 아직 아무것도 건드리지 않은 상태라, 언인스톨러가 끝나면 그대로
+      // Result := True로 진행하면 그게 곧 "제거 후 새로 설치"다. 프로세스도 하나, UAC도
+      // 한 번, 중간에 끊기는 지점도 없다.
+      // 이때 Exec(..., ewWaitUntilTerminated)가 제거가 끝날 때까지 실제로 기다리는지가
+      // 관건인데, Inno 6 언인스톨러는 자기를 %TEMP%로 복사해 2단계(_unins.tmp)로 재실행한
+      // 뒤에도 1단계 프로세스(unins000.exe)를 살려두고 MsgWaitForMultipleObjects로 대기하다가,
+      // 2단계가 파일·레지스트리를 전부 지운 다음 보내는 WM_KillFirstPhase를 받고 나서야
+      // 종료한다(Setup.Uninstall.pas RunFirstPhase/RunSecondPhase 확인). 즉 Exec가 돌아온
+      // 시점엔 언인스톨 레지스트리 키까지 이미 지워진 뒤라 그대로 이어서 설치해도 안전하다.
       Exec(RemoveQuotes(uninst), '', '', SW_SHOW, ewWaitUntilTerminated, code);
-      if not ShellExec('', ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code) then
-        MsgBox('설치 프로그램을 다시 시작하지 못했습니다.'#13#10'Setup.exe를 다시 눌러 새로 설치해 주세요.', mbError, MB_OK);
-      Result := False;
+
+      // 제거가 실제로 끝났는지는 종료 코드 말고 레지스트리(사실상의 근거)로 확인한다.
+      // 사용자가 제거 확인창에서 취소했거나 제거가 실패하면 키가 그대로 남아있다.
+      if GetUninstallString() <> '' then
+      begin
+        if MsgBox('기존 버전 제거가 완료되지 않았습니다. (제거를 취소하셨을 수 있습니다)'#13#10#13#10'[예] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.'#13#10'[아니오] 설치를 종료합니다.',
+           mbConfirmation, MB_YESNO) <> IDYES then
+          Result := False;
+      end;
     end;
   end;
 end;
