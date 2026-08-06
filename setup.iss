@@ -31,6 +31,14 @@ MinVersion=10.0
 [Languages]
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
+// Inno 기본 "정말 제거하시겠습니까?" 확인창(ConfirmUninstall)이 데이터 안전 여부를 전혀
+// 언급 안 해서, 실제로는 다음 화면(체크박스, 기본 미체크)에서만 데이터가 지워지는데도
+// 이 화면만 보면 전부 지워지는 것처럼 읽힘 — 형이 과거 실제 데이터 손실을 겪은 뒤로 이
+// 문구를 볼 때마다 불안해함(2026-08-06). 코드가 아니라 사람의 설명에 의존하지 않도록
+// 다이얼로그 문구 자체에 안전 여부를 명시.
+[Messages]
+ConfirmUninstall=%1의 프로그램 파일을 제거합니다.%n%n레이아웃·설정 등 저장된 데이터는 다음 화면에서 별도로 체크하지 않는 한 삭제되지 않습니다.%n%n계속하시겠습니까?
+
 [Tasks]
 Name: "startupentry"; Description: "Windows 시작 시 자동 실행"; GroupDescription: "추가 옵션:"; Flags: unchecked
 
@@ -80,7 +88,7 @@ begin
   uninst := GetUninstallString();
   if uninst <> '' then
   begin
-    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까?'#13#10#13#10'[예] 제거 후, Setup을 다시 실행해 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
+    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 제거 후, Setup을 다시 실행해 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
        mbConfirmation, MB_YESNO) = IDYES then
     begin
       // 언인스톨러를 UI와 함께 실행 → 그 안에서 2단계(데이터 삭제 확인)까지 이어짐. 끝나면 설치는 중단.
@@ -105,6 +113,10 @@ end;
 // 0.6초 한 번만 기다리고 넘어가면, 안티바이러스 스캔 지연이나 무언가가 곧바로 재실행시키는
 // 경우 파일 핸들이 아직 안 풀려서 DeleteFile 액세스 거부로 설치가 깨졌다(2026-08-04 형이 실제
 // 재현). 죽었는지 다시 확인하면서 여러 번 재시도하도록 강화한다.
+// 2026-08-06: taskkill 5회(0.8초 간격, 총 4초)로도 "종료하지 못했습니다"가 재현됨(정확한
+// 원인 미확정 — 권한 문제로 taskkill 자체가 조용히 실패하는 경우 exit code를 신뢰할 수 없어
+// 첫 실패 즉시 안내하는 대신 재시도 폭 자체를 넓힘: 8회, 1.1초 간격(총 8.8초) + PowerShell
+// Stop-Process도 번갈아 시도해서 taskkill 한 가지 방법에만 의존하지 않게 함.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   code, attempt: Integer;
@@ -115,14 +127,18 @@ begin
     if MsgBox('K-Zone이 실행 중입니다.'#13#10'종료하고 설치를 계속하시겠습니까?', mbConfirmation, MB_YESNO) = IDYES then
     begin
       attempt := 0;
-      while IsAppRunning() and (attempt < 5) do
+      while IsAppRunning() and (attempt < 8) do
       begin
         Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName} /T', '', SW_HIDE, ewWaitUntilTerminated, code);
-        Sleep(800); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
+        if IsAppRunning() then
+          Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+            '-NoProfile -Command "Get-Process -Name ''K-Zone'' -ErrorAction SilentlyContinue | Stop-Process -Force"',
+            '', SW_HIDE, ewWaitUntilTerminated, code);
+        Sleep(1100); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
         attempt := attempt + 1;
       end;
       if IsAppRunning() then
-        Result := 'K-Zone을 종료하지 못했습니다.'#13#10'프로그램을 직접 종료한 후 설치를 다시 실행해 주세요.';
+        Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.'#13#10'(관리자 권한으로 실행 중인 K-Zone은 이 설치 프로그램이 대신 종료할 수 없습니다)';
     end
     else
       Result := '설치가 취소되었습니다. K-Zone을 종료한 후 다시 시도해 주세요.';
