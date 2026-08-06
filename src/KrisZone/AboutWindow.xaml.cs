@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Security.Principal;
 using System.Windows;
 
 namespace KrisZone
@@ -52,7 +53,16 @@ namespace KrisZone
             {
                 var installerPath = await UpdateChecker.DownloadInstallerAsync(result.DownloadUrl!, result.LatestVersion!);
                 StatusText.Text = "다운로드 완료! 설치를 시작합니다...";
-                Process.Start(new ProcessStartInfo(installerPath) { UseShellExecute = true });
+                var psi = new ProcessStartInfo(installerPath) { UseShellExecute = true };
+                // K-Zone은 다른 창을 관리하는 프로그램 특성상 형이 관리자 권한으로 실행해두는
+                // 경우가 실제로 있음(2026-08-06 실측 확인 — 일반 권한 설치 프로그램은 관리자
+                // 권한으로 떠있는 K-Zone을 종료시키지 못해 설치가 막힘). 지금 실행 중인 이
+                // K-Zone 자신이 관리자 권한이면 설치파일도 같이 관리자 권한(runas)으로 띄워서
+                // 자기 자신을 확실히 종료·교체할 수 있게 함 — 일반 권한으로 쓰는 다수 사용자는
+                // 이 분기를 안 타서 평소처럼 UAC 프롬프트 없이 그대로 진행됨.
+                if (IsRunningAsAdmin())
+                    psi.Verb = "runas";
+                Process.Start(psi);
                 await System.Threading.Tasks.Task.Delay(500);
                 System.Windows.Application.Current.Shutdown();
             }
@@ -61,6 +71,12 @@ namespace KrisZone
                 StatusText.Text = $"다운로드 실패: {ex.Message}";
                 UpdateBtn.IsEnabled = true;
             }
+        }
+
+        private static bool IsRunningAsAdmin()
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
         }
     }
 }
