@@ -12,7 +12,14 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-PrivilegesRequired=lowest
+// K-Zone은 다른 창을 관리하는 특성상 형이 앱 자체를 관리자 권한으로 켜놓고 쓰는 경우가
+// 있는데, 그러면 일반 권한 설치 프로그램이 실행 중인 K-Zone을 강제 종료하지 못해 설치가
+// 막힘. 자체적으로 "관리자 권한으로 재시작할까요?" 되묻는 방식(1.2.1-4)은 UAC 창이 다른
+// 창 뒤에 가려지는 등 오히려 더 헷갈리고 불안정했음(2026-08-06 형 실기 확인) — 대신 설치
+// 프로그램 자체를 처음부터 항상 관리자 권한(admin)으로 요구해서, 표준 윈도우 UAC 확인창이
+// 설치 시작 시 한 번만 뜨고 그 뒤로는 무조건 관리자 권한이라 종료 실패 자체가 안 생기게 함.
+// 설치된 K-Zone.exe 자체는 그대로 asInvoker라 평소 실행엔 전혀 영향 없음.
+PrivilegesRequired=admin
 CloseApplications=yes
 CloseApplicationsFilter=*.exe
 RestartApplications=no
@@ -117,10 +124,13 @@ end;
 // 0.6초 한 번만 기다리고 넘어가면, 안티바이러스 스캔 지연이나 무언가가 곧바로 재실행시키는
 // 경우 파일 핸들이 아직 안 풀려서 DeleteFile 액세스 거부로 설치가 깨졌다(2026-08-04 형이 실제
 // 재현). 죽었는지 다시 확인하면서 여러 번 재시도하도록 강화한다.
-// 2026-08-06: taskkill 5회(0.8초 간격, 총 4초)로도 "종료하지 못했습니다"가 재현됨(정확한
-// 원인 미확정 — 권한 문제로 taskkill 자체가 조용히 실패하는 경우 exit code를 신뢰할 수 없어
-// 첫 실패 즉시 안내하는 대신 재시도 폭 자체를 넓힘: 8회, 1.1초 간격(총 8.8초) + PowerShell
-// Stop-Process도 번갈아 시도해서 taskkill 한 가지 방법에만 의존하지 않게 함.
+// 2026-08-06: 관리자 권한으로 실행 중인 K-Zone은 일반 권한 taskkill/Stop-Process로 절대
+// 종료가 안 된다는 걸 형이 실기로 확인(재시도 8회+PowerShell 병행해도 100% 실패) — Setup
+// 자신이 관리자 권한으로 재시작할지 되묻는 방식도 시도했지만 UAC 창이 안 보이는 등 오히려
+// 더 헷갈려서 롤백함. 대신 [Setup]에 PrivilegesRequired=admin을 넣어 Setup.exe 자체가
+// 처음부터 항상 관리자 권한으로 뜨도록 바꿔서, 이 함수가 실행되는 시점엔 이미 무조건 관리자
+// 권한이라 대상이 관리자 권한이든 아니든 taskkill 한 번이면 사실상 항상 성공함 — 그래도
+// 혹시 남는 극단적 케이스(느린 핸들 해제 등) 대비로 재시도만 유지.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   code, attempt: Integer;
@@ -141,22 +151,8 @@ begin
         Sleep(1100); // 프로세스 종료 후 OS가 파일 핸들 풀 시간 확보
         attempt := attempt + 1;
       end;
-      // 그래도 안 죽으면 관리자 권한으로 실행 중인 K-Zone일 가능성이 큼(2026-08-06 형이 실기로
-      // "관리자 권한으로 Setup을 실행하니 된다"고 확인해서 확정) — 이미 관리자 권한으로 이
-      // Setup 자신이 떠있는 상태(IsAdmin)면 그것도 못 끄는 거니 더 물어볼 것 없이 안내만 하고,
-      // 아직 일반 권한이면 이 Setup 자신을 관리자 권한으로 재시작해서 자동으로 한 번 더 시도.
       if IsAppRunning() then
-      begin
-        if IsAdmin() then
-          Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.'
-        else if MsgBox('일반 권한으로는 K-Zone을 종료할 수 없습니다(관리자 권한으로 실행 중일 수 있습니다).'#13#10'관리자 권한으로 설치 프로그램을 다시 시작하시겠습니까?', mbConfirmation, MB_YESNO) = IDYES then
-        begin
-          ShellExec('runas', ExpandConstant('{srcexe}'), '', '', SW_SHOW, ewNoWait, code);
-          Result := '관리자 권한으로 설치 프로그램을 다시 실행합니다. 이 창은 닫아주세요.';
-        end
-        else
-          Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.';
-      end;
+        Result := 'K-Zone을 종료하지 못했습니다.'#13#10'작업 관리자에서 K-Zone을 직접 종료한 후 설치를 다시 실행해 주세요.';
     end
     else
       Result := '설치가 취소되었습니다. K-Zone을 종료한 후 다시 시도해 주세요.';
