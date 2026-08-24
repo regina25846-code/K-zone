@@ -9,38 +9,222 @@
         ResizeMode="NoResize"
         Width="320" SizeToContent="Height"
         WindowStartupLocation="CenterScreen">
-    <Border Background="#FFFFFF" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="14">
+    <!-- Spatial Light Glass — K-Zone은 다크 모드가 없어 라이트 한 벌만.
+         WPF는 backdrop-filter(실시간 블러) 대응물이 없어서, 오로라를 자기 자신만
+         흐리는 BlurEffect로 미리 칠해두고 그 위에 반투명 흰 유리판을 얹는 방식으로
+         근사한다(상세 근거는 WPF_NOTES.md).
+         ⚠ ClipToBounds="True"인 요소에 Effect(그림자)를 같이 걸면 그림자까지 잘려서
+         안 보이게 되므로, 그림자 전담(바깥, Clip 없음)과 라운드 클립 전담(안쪽)을
+         Border 두 겹으로 분리한다. -->
+    <Border>
         <Border.Effect>
-            <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="Black" Opacity="0.25"/>
+            <DropShadowEffect BlurRadius="34" ShadowDepth="10" Direction="270" Color="#121C36" Opacity="0.30"/>
         </Border.Effect>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+    <Border CornerRadius="20" ClipToBounds="True">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0.14,1">
+                <GradientStop Color="#EAEEF5" Offset="0"/>
+                <GradientStop Color="#DCE2EE" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.BorderBrush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#AEE5DC" Offset="0"/>
+                <GradientStop Color="#1A121C36" Offset="0.3"/>
+                <GradientStop Color="#1A121C36" Offset="0.64"/>
+                <GradientStop Color="#85268075" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.BorderBrush>
+        <Border.BorderThickness>1</Border.BorderThickness>
+        <Grid ClipToBounds="True">
+            <!-- 오로라: 자기 자신만 흐리는 BlurEffect가 여기선 정확히 맞는 용도 -->
+            <Canvas>
+                <Ellipse Width="220" Height="180" Canvas.Left="-40" Canvas.Top="-60" Opacity="0.55">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#AEE5DC" Offset="0"/>
+                            <GradientStop Color="#00AEE5DC" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect><BlurEffect Radius="40"/></Ellipse.Effect>
+                </Ellipse>
+                <Ellipse Width="240" Height="200" Canvas.Left="140" Canvas.Top="-40" Opacity="0.45">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#268075" Offset="0"/>
+                            <GradientStop Color="#00268075" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect><BlurEffect Radius="40"/></Ellipse.Effect>
+                </Ellipse>
+                <Ellipse Width="260" Height="200" Canvas.Left="20" Canvas.Top="280" Opacity="0.4">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#AEE5DC" Offset="0"/>
+                            <GradientStop Color="#00AEE5DC" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                    <Ellipse.Effect><BlurEffect Radius="40"/></Ellipse.Effect>
+                </Ellipse>
+            </Canvas>
 
-            <!-- 헤더 -->
-            <Border Grid.Row="0" BorderBrush="#EEEEEE" BorderThickness="0,0,0,1" Padding="16,14">
-                <Grid>
-                    <TextBlock Text="프로그램 정보" FontSize="14" FontWeight="Bold"
-                               Foreground="#111111" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <Button x:Name="CloseBtn" Width="22" Height="22" HorizontalAlignment="Right"
-                            Click="CloseBtn_Click" Cursor="Hand"
-                            Background="#E5E5E5" Foreground="#555555" FontSize="11"
-                            BorderThickness="0" Content="✕">
+            <!-- 유리판 -->
+            <Border Background="#8CFFFFFF" CornerRadius="20"/>
+            <Rectangle Height="1" VerticalAlignment="Top" Fill="#EBFFFFFF"/>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 헤더 -->
+                <Border Grid.Row="0" BorderBrush="#17121C36" BorderThickness="0,0,0,1" Padding="16,14">
+                    <Grid>
+                        <TextBlock Text="프로그램 정보" FontSize="11" FontWeight="Bold" Foreground="#8791A2"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Button x:Name="CloseBtn" Width="26" Height="26" HorizontalAlignment="Right"
+                                Click="CloseBtn_Click" Cursor="Hand"
+                                Background="#80FFFFFF" Foreground="#8791A2" FontSize="11"
+                                BorderThickness="1" BorderBrush="#1A121C36" Content="✕">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="13" Width="26" Height="26">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#B3FFFFFF"/>
+                                                        <Setter Property="Foreground" Value="#141922"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- 본문 -->
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top"
+                            Margin="24,22,24,22" TextBlock.TextAlignment="Center">
+                    <!-- 아이콘 — 유리 액자 안에 원본 PNG 그대로 -->
+                    <Border Width="104" Height="104" CornerRadius="27" Margin="0,0,0,16" ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0.7,0.7">
+                                <GradientStop Color="#D6FFFFFF" Offset="0"/>
+                                <GradientStop Color="#26268075" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.BorderBrush>
+                            <SolidColorBrush Color="#38268075"/>
+                        </Border.BorderBrush>
+                        <Border.BorderThickness>1</Border.BorderThickness>
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="30" ShadowDepth="12" Direction="270" Color="#09514B" Opacity="0.42"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Border Width="82" Height="82" CornerRadius="20" ClipToBounds="True">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="22" ShadowDepth="12" Direction="270" Color="#121C36" Opacity="0.34"/>
+                                </Border.Effect>
+                                <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
+                            </Border>
+                            <Rectangle IsHitTestVisible="False">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.78">
+                                        <GradientStop Color="#D9FFFFFF" Offset="0"/>
+                                        <GradientStop Color="#3DFFFFFF" Offset="0.15"/>
+                                        <GradientStop Color="#00FFFFFF" Offset="0.34"/>
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </Grid>
+                    </Border>
+
+                    <!-- eyebrow -->
+                    <TextBlock Text="K  ·  S E R I E S" FontSize="9" FontWeight="Bold" Foreground="#8791A2" Margin="0,0,0,9"/>
+
+                    <!-- 앱 이름 -->
+                    <TextBlock FontSize="24" FontWeight="Black" Margin="0,0,0,12">
+                        <Run Text="K-" Foreground="#141922"/><Run Text="Zone">
+                            <Run.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#09514B" Offset="0"/>
+                                    <GradientStop Color="#062F2B" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Run.Foreground>
+                        </Run>
+                    </TextBlock>
+
+                    <!-- 버전 pill -->
+                    <Border CornerRadius="999" Background="#80FFFFFF" BorderThickness="1" Padding="13,5" Margin="0,0,0,16">
+                        <Border.BorderBrush><SolidColorBrush Color="#42268075"/></Border.BorderBrush>
+                        <TextBlock x:Name="VersionText" Text="버전 1.2.2" FontSize="11.5" FontWeight="Bold" Foreground="#09514B"/>
+                    </Border>
+
+                    <!-- rule -->
+                    <Rectangle Height="1" Margin="0,0,0,14">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#00121C36" Offset="0"/>
+                                <GradientStop Color="#17121C36" Offset="0.18"/>
+                                <GradientStop Color="#17121C36" Offset="0.82"/>
+                                <GradientStop Color="#00121C36" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+
+                    <!-- 설명 -->
+                    <TextBlock FontSize="13" Foreground="#525B6B" LineHeight="23" Margin="0,0,0,12" FontWeight="Medium">
+                        윈도우 멀티 모니터 존 분할 관리<LineBreak/>
+                        드래그로 앱을 정해진 영역에 배치
+                    </TextBlock>
+
+                    <!-- 저작권 -->
+                    <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="10.5" Foreground="#8791A2" Margin="0,0,0,19"/>
+
+                    <!-- 업데이트 -->
+                    <Button x:Name="UpdateBtn" Click="UpdateBtn_Click" Cursor="Hand"
+                            Padding="22,11" HorizontalAlignment="Center" BorderThickness="0">
+                        <Button.Content>
+                            <TextBlock Text="업데이트 확인" FontSize="13" FontWeight="Bold" Foreground="White"/>
+                        </Button.Content>
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0.77,1">
+                                <GradientStop Color="#268075" Offset="0"/>
+                                <GradientStop Color="#186B62" Offset="0.52"/>
+                                <GradientStop Color="#09514B" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <Button.Effect>
+                            <DropShadowEffect BlurRadius="24" ShadowDepth="9" Direction="270" Color="#09514B" Opacity="0.55"/>
+                        </Button.Effect>
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                                    CornerRadius="11" Width="22" Height="22">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Border x:Name="UBd" Background="{TemplateBinding Background}" CornerRadius="13"
+                                                    RenderTransformOrigin="0.5,0.5">
+                                                <Border.RenderTransform>
+                                                    <TranslateTransform x:Name="UBdTransform" Y="0"/>
+                                                </Border.RenderTransform>
+                                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bd" Property="Background" Value="#E74C3C"/>
-                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter TargetName="UBdTransform" Property="Y" Value="-2"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter TargetName="UBd" Property="Opacity" Value="0.55"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -49,64 +233,10 @@
                             </Style>
                         </Button.Style>
                     </Button>
-                </Grid>
-            </Border>
-
-            <!-- 본문 -->
-            <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top"
-                        Margin="24,20,24,20" TextBlock.TextAlignment="Center">
-                <!-- 아이콘 -->
-                <Border Width="84" Height="84" CornerRadius="18" ClipToBounds="True"
-                        Margin="0,0,0,20" Background="#FFFFFF">
-                    <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
-                </Border>
-
-                <!-- 앱 이름 -->
-                <TextBlock Text="K-Zone" FontSize="18" FontWeight="ExtraBold"
-                           Foreground="#111111" Margin="0,0,0,4"/>
-
-                <!-- 버전 -->
-                <TextBlock x:Name="VersionText" Text="버전 1.0.1" FontSize="12"
-                           Foreground="#999999" Margin="0,0,0,16"/>
-
-                <!-- 구분선 -->
-                <Border Height="1" Background="#EEEEEE" Margin="0,0,0,14"/>
-
-                <!-- 설명 -->
-                <TextBlock FontSize="13" Foreground="#333333" LineHeight="24" Margin="0,0,0,14">
-                    윈도우 멀티 모니터 존 분할 관리<LineBreak/>
-                    드래그로 앱을 정해진 영역에 배치
-                </TextBlock>
-
-                <!-- 저작권 -->
-                <TextBlock Text="© 2026 KrisB. All rights reserved." FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,18"/>
-
-                <!-- 업데이트 -->
-                <Button x:Name="UpdateBtn" Content="업데이트 확인" Click="UpdateBtn_Click" Cursor="Hand"
-                        Padding="16,7" HorizontalAlignment="Center"
-                        Background="#ECECEA" Foreground="#333333" FontSize="12" FontWeight="SemiBold"
-                        BorderThickness="0">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="UBd" Background="{TemplateBinding Background}" CornerRadius="8">
-                                            <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="UBd" Property="Background" Value="#E0E0DD"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <TextBlock x:Name="StatusText" Text="" FontSize="11" Foreground="#AAAAAA" Margin="0,8,0,0"/>
-            </StackPanel>
+                    <TextBlock x:Name="StatusText" Text="" FontSize="11" Foreground="#8791A2" Margin="0,9,0,0"/>
+                </StackPanel>
+            </Grid>
         </Grid>
+    </Border>
     </Border>
 </Window>
