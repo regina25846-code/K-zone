@@ -116,37 +116,41 @@
                 <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top"
                             Margin="24,22,24,22" TextBlock.TextAlignment="Center">
                     <!-- 아이콘 — 유리 액자 안에 원본 PNG 그대로 -->
-                    <Border Width="104" Height="104" CornerRadius="27" Margin="0,0,0,16" ClipToBounds="True">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0.7,0.7">
-                                <GradientStop Color="#D6FFFFFF" Offset="0"/>
-                                <GradientStop Color="#26268075" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Border.BorderBrush>
-                            <SolidColorBrush Color="#38268075"/>
-                        </Border.BorderBrush>
-                        <Border.BorderThickness>1</Border.BorderThickness>
+                    <Border Width="104" Height="104" CornerRadius="27" Margin="0,0,0,16">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="30" ShadowDepth="12" Direction="270" Color="#09514B" Opacity="0.42"/>
                         </Border.Effect>
-                        <Grid>
-                            <Border Width="82" Height="82" CornerRadius="20" ClipToBounds="True">
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="22" ShadowDepth="12" Direction="270" Color="#121C36" Opacity="0.34"/>
-                                </Border.Effect>
-                                <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
-                            </Border>
-                            <Rectangle IsHitTestVisible="False">
-                                <Rectangle.Fill>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.78">
-                                        <GradientStop Color="#D9FFFFFF" Offset="0"/>
-                                        <GradientStop Color="#3DFFFFFF" Offset="0.15"/>
-                                        <GradientStop Color="#00FFFFFF" Offset="0.34"/>
-                                    </LinearGradientBrush>
-                                </Rectangle.Fill>
-                            </Rectangle>
-                        </Grid>
+                        <Border CornerRadius="27" ClipToBounds="True">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0.7,0.7">
+                                    <GradientStop Color="#D6FFFFFF" Offset="0"/>
+                                    <GradientStop Color="#26268075" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#38268075"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>1</Border.BorderThickness>
+                            <Grid>
+                                <Border Width="82" Height="82" CornerRadius="20">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="22" ShadowDepth="12" Direction="270" Color="#121C36" Opacity="0.34"/>
+                                    </Border.Effect>
+                                    <Border CornerRadius="20" ClipToBounds="True">
+                                        <Image Source="pack://application:,,,/Resources/app_icon.png" Stretch="UniformToFill"/>
+                                    </Border>
+                                </Border>
+                                <Rectangle IsHitTestVisible="False">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.78">
+                                            <GradientStop Color="#D9FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#3DFFFFFF" Offset="0.15"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="0.34"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </Grid>
+                        </Border>
                     </Border>
 
                     <!-- eyebrow -->
@@ -212,16 +216,12 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border x:Name="UBd" Background="{TemplateBinding Background}" CornerRadius="13"
-                                                    RenderTransformOrigin="0.5,0.5">
-                                                <Border.RenderTransform>
-                                                    <TranslateTransform x:Name="UBdTransform" Y="0"/>
-                                                </Border.RenderTransform>
+                                            <Border x:Name="UBd" Background="{TemplateBinding Background}" CornerRadius="13">
                                                 <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="UBdTransform" Property="Y" Value="-2"/>
+                                                    <Setter TargetName="UBd" Property="Margin" Value="0,-2,0,2"/>
                                                 </Trigger>
                                                 <Trigger Property="IsEnabled" Value="False">
                                                     <Setter TargetName="UBd" Property="Opacity" Value="0.55"/>
