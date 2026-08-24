@@ -197,16 +197,44 @@
                                                             <!-- 목업 svg: viewBox 24 안의 (6,6)~(18,18)=12칸을 11px로 축소해 그린다
                                                                  → 실제 X 크기 12*(11/24)=5.5px, stroke 3*(11/24)=1.375px.
                                                                  (9x9로 그리면 64% 커져서 목업보다 훨씬 굵고 크게 보인다) -->
+                                                            <!-- .x:hover의 rotate(90deg) .18s를 재현하려고 회전축을 미리 걸어둔다.
+                                                                 XIcon은 ControlTemplate 안에 있어 TargetName으로 지목 가능하지만,
+                                                                 각도 자체(Freezable)는 Setter.TargetName이 못 잡으므로 아래
+                                                                 Trigger.EnterActions/ExitActions의 Storyboard가
+                                                                 (UIElement.RenderTransform).(RotateTransform.Angle) 경로로 돈다. -->
                                                             <Path x:Name="XIcon"
                                                                   Data="M 0,0 L 5.5,5.5 M 5.5,0 L 0,5.5"
                                                                   Stroke="{TemplateBinding Foreground}" StrokeThickness="1.375"
                                                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                  RenderTransformOrigin="0.5,0.5"
+                                                                  HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                <Path.RenderTransform>
+                                                                    <RotateTransform Angle="0"/>
+                                                                </Path.RenderTransform>
+                                                            </Path>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <!-- .x:hover : background glass-solid, color ink -->
                                                                 <Setter TargetName="Bd" Property="Border.Background" Value="#D6FFFFFF"/>
+                                                                <Trigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation To="90" Duration="0:0:0.18"
+                                                                                             Storyboard.TargetName="XIcon"
+                                                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.EnterActions>
+                                                                <Trigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation To="0" Duration="0:0:0.18"
+                                                                                             Storyboard.TargetName="XIcon"
+                                                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </Trigger.ExitActions>
                                                                 <Setter TargetName="XIcon" Property="Shape.Stroke" Value="#141922"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
@@ -251,11 +279,58 @@
                                     </Ellipse.Fill>
                                 </Ellipse>
 
-                                <!-- .badge — 그림자 전담(바깥) / 유리 액자(안쪽) 분리 -->
-                                <Border Width="104" Height="104" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- .badge — 그림자 전담(바깥) / 유리 액자(안쪽) 분리
+                                     .badge:hover{transform:translateY(-4px) rotate(-2deg)} 재현.
+                                     Setter.TargetName은 TransformGroup 내부(Freezable)를 못 잡으므로
+                                     Trigger.EnterActions/ExitActions의 Storyboard가
+                                     (UIElement.RenderTransform).(TransformGroup.Children)[n] 경로로 돈다. -->
+                                <Border Width="104" Height="104" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        RenderTransformOrigin="0.5,0.5">
+                                    <Border.RenderTransform>
+                                        <TransformGroup>
+                                            <TranslateTransform Y="0"/>
+                                            <RotateTransform Angle="0"/>
+                                        </TransformGroup>
+                                    </Border.RenderTransform>
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="26" ShadowDepth="15" Direction="270" Color="#09514B" Opacity="0.45"/>
                                     </Border.Effect>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Trigger.EnterActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation To="-4" Duration="0:0:0.5"
+                                                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)">
+                                                                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                </DoubleAnimation>
+                                                                <DoubleAnimation To="-2" Duration="0:0:0.5"
+                                                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(RotateTransform.Angle)">
+                                                                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                </DoubleAnimation>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.EnterActions>
+                                                    <Trigger.ExitActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation To="0" Duration="0:0:0.5"
+                                                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)">
+                                                                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                </DoubleAnimation>
+                                                                <DoubleAnimation To="0" Duration="0:0:0.5"
+                                                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(RotateTransform.Angle)">
+                                                                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                                                </DoubleAnimation>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </Trigger.ExitActions>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <!-- background: color-mix(tint 15%, rgba(255,255,255,.84)) = #DCD9E9E7
                                          box-shadow inset 0 0 0 1px color-mix(tint 22%) = BorderBrush #38268075 -->
                                     <Border CornerRadius="27" BorderThickness="1" BorderBrush="#38268075" Background="#DCD9E9E7">
