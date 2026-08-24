@@ -333,8 +333,14 @@
                                  K-Zone의 name-grad는 #09514B 단색(양끝 동일)이라 그대로 단색으로 옮긴다. -->
                             <TextBlock FontSize="24" FontWeight="Black" Margin="0,0,0,12"><Run Text="K-" Foreground="#141922"/><Run Text="Zone" Foreground="#09514B"/></TextBlock>
 
-                            <!-- .ver : inline-flex(내용폭) → HorizontalAlignment=Center 필수 -->
-                            <Border CornerRadius="999" Background="#80FFFFFF" BorderThickness="1"
+                            <!-- .ver : inline-flex(내용폭) → HorizontalAlignment=Center 필수.
+                                 ⚠ CSS의 border-radius:999px는 박스 크기에 맞춰 자동으로 클램프돼서
+                                 항상 완전한 스타디움(알약) 모양이 되지만, WPF의 CornerRadius는 이
+                                 자동 클램프가 없어서 999처럼 실제 크기보다 훨씬 큰 값을 주면 모서리
+                                 호가 서로 겹쳐 계란/렌즈 모양으로 일그러진다(1.2.2-5 실기에서 확인,
+                                 K-Clock과 테두리 모양이 달라 보인 원인). 실제 높이(패딩 5+5 +
+                                 폰트 11.5px 줄높이 ≈ 26px)의 절반인 13으로 직접 계산해서 넣는다. -->
+                            <Border CornerRadius="13" Background="#80FFFFFF" BorderThickness="1"
                                     BorderBrush="#42268075" Padding="13,5" Margin="0,0,0,18"
                                     HorizontalAlignment="Center">
                                 <!-- 실제 문자열은 AboutWindow.xaml.cs가 "v{버전}"으로 덮어쓴다.
