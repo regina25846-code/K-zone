@@ -22,7 +22,10 @@ namespace KrisZone
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             // 커밋 해시(+로 붙는 SourceRevisionId)가 혹시 남아있어도 화면엔 안 보이게 방어.
             _currentVersion = infoVer?.Split('+')[0] ?? _currentVersion;
-            VersionText.Text = $"버전 {_currentVersion}";
+            // K-시리즈 About 창 버전 표기는 "v1.2.3" 형식으로 통일한다.
+            // 예전엔 "버전 1.2.3"이었는데 K-Clock은 "v1.4.1"이라 두 앱을 나란히 놓으면
+            // 표기가 달라 보였음(오푸스 시안 단계부터 앱마다 달랐던 것, 2026-08-25 통일).
+            VersionText.Text = $"v{_currentVersion}";
         }
 
         private void CloseBtn_Click(object sender, RoutedEventArgs e) => Close();

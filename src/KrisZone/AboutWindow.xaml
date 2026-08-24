@@ -337,7 +337,9 @@
                             <Border CornerRadius="999" Background="#80FFFFFF" BorderThickness="1"
                                     BorderBrush="#42268075" Padding="13,5" Margin="0,0,0,18"
                                     HorizontalAlignment="Center">
-                                <TextBlock x:Name="VersionText" Text="버전 1.2.2" FontSize="11.5"
+                                <!-- 실제 문자열은 AboutWindow.xaml.cs가 "v{버전}"으로 덮어쓴다.
+                                     디자이너 미리보기용 기본값도 같은 형식으로 맞춰둠. -->
+                                <TextBlock x:Name="VersionText" Text="v1.2.2" FontSize="11.5"
                                            FontWeight="Bold" Foreground="#09514B"/>
                             </Border>
 
@@ -374,8 +376,60 @@
                                 </Button.Background>
                                 <Button.Content>
                                     <StackPanel Orientation="Horizontal">
-                                        <!-- Viewbox로 24 viewBox → 15px 축소(스트로크 두께까지 같이 축소) -->
-                                        <Viewbox Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <!-- Viewbox로 24 viewBox → 15px 축소(스트로크 두께까지 같이 축소)
+
+                                             .btn svg{transition:transform .3s ease}
+                                             .btn:hover svg{transform:rotate(120deg)}
+                                             ⚠ 이 Viewbox는 Button.Content 안에 있어서 ControlTemplate의
+                                                Triggers에서 Setter.TargetName으로 지목할 수 없다(템플릿 밖 요소).
+                                                그래서 Viewbox 자신의 Style에 DataTrigger를 달고, 부모 Button의
+                                                IsMouseOver를 RelativeSource FindAncestor로 바인딩한다.
+                                             ⚠ Angle을 Setter로 직접 바꾸려 하면 RotateTransform이 Freezable이라
+                                                Setter.TargetName이 못 잡는 문제에 다시 걸리므로, 여기서는
+                                                Storyboard가 (UIElement.RenderTransform).(RotateTransform.Angle)
+                                                경로로 접근한다 — 이러면 Freezable을 이름으로 지목할 필요가 없고
+                                                덤으로 CSS의 transition .3s와 같은 부드러운 회전까지 재현된다.
+                                             ※ 버튼 자체가 2px 떠오르는 효과(아래 UBd TranslateTransform)는
+                                                시안에도 .btn:hover{transform:translateY(-2px)}로 그대로 있으므로
+                                                제거하지 않고 유지한다. 시안과 달랐던 건 "아이콘 회전 누락"뿐. -->
+                                        <Viewbox Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                 RenderTransformOrigin="0.5,0.5">
+                                            <Viewbox.RenderTransform>
+                                                <RotateTransform Angle="0"/>
+                                            </Viewbox.RenderTransform>
+                                            <Viewbox.Style>
+                                                <Style TargetType="Viewbox">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Value="True"
+                                                                     Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType={x:Type Button}}}">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation To="120" Duration="0:0:0.3"
+                                                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <CubicEase EasingMode="EaseInOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation To="0" Duration="0:0:0.3"
+                                                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                            <DoubleAnimation.EasingFunction>
+                                                                                <CubicEase EasingMode="EaseInOut"/>
+                                                                            </DoubleAnimation.EasingFunction>
+                                                                        </DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Viewbox.Style>
                                             <Canvas Width="24" Height="24">
                                                 <Path Data="M 21,12 A 9,9 0 1 1 18.36,5.64"
                                                       Stroke="White" StrokeThickness="2.4"
