@@ -26,6 +26,18 @@ RestartApplications=no
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
+// ── 업그레이드 시 설치 위치 처리 (2026-08-25) ──────────────────────────────────
+// UsePreviousAppDir은 원래 기본값이 yes지만, 아래 DisableDirPage=no와 짝이라 명시해둔다.
+// AppId가 고정이라 Inno가 이전 설치의 언인스톨 레지스트리 키에서 예전 설치 경로를 읽어
+// 설치 위치 입력란에 그대로 미리 채워준다 → 사용자가 [다음]만 누르면 항상 같은 자리에
+// 덮어쓰기 업그레이드가 된다(폴더가 갈라져 두 벌 설치되는 사고 방지).
+UsePreviousAppDir=yes
+// ⚠ Inno Setup 6의 DisableDirPage 기본값은 auto이고, auto는 "이전 설치가 감지되면
+// 설치 위치 화면을 건너뛴다"는 뜻이다. 예전엔 InitializeSetup에서 구버전을 먼저 제거해
+// 레지스트리 키가 사라진 뒤라 이 화면이 떴는데, 그 제거 단계를 폐지(2026-08-07 표준)한
+// 지금은 업그레이드할 때마다 이 화면이 통째로 사라진다 — K-앱 공통 설치 흐름 표준의
+// "설치 위치 보여줌" 항목이 조용히 깨지는 것. no로 못박아 항상 보이게 한다.
+DisableDirPage=no
 OutputDir=installer
 OutputBaseFilename=K-Zone.Setup.{#MyAppVersion}
 SetupIconFile=src\KrisZone\Resources\icon.ico
@@ -62,87 +74,24 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Filename: "{app}\{#MyAppExeName}"; Description: "K-Zone 실행"; Flags: nowait postinstall skipifsilent
 
 [Code]
-// K-앱 공통 설치 흐름 표준 5단계 (2026-07-19 확정, K-Clock 기준) 적용:
-//  1) 이미 설치돼있으면 실행 시 제거/유지 선택
-//  2) 제거 선택 시 애플리케이션 데이터 삭제 여부 확인(체크박스, 기본 체크 해제)
-//  3) 프로그램 실행 중이면 종료 확인창
-//  4) 설치 위치 표시 (Inno 기본 DirPage — 별도 설정 불필요)
-//  5) 완료 화면에 프로그램 실행([Run] 기본 제공) + 바탕화면 바로가기 체크란(아래 커스텀 컨트롤,
-//     기본 체크) — 바탕화면 바로가기는 원래 그보다 앞 단계인 "추가 작업 선택" 화면의
-//     [Tasks] 항목이었는데, 표준 문서상 완료 화면에 있어야 해서 옮김(2026-08-04 형 확인).
+// K-앱 공통 설치 흐름 표준 (2026-08-07 개정) 적용:
+//  1) 이미 설치돼있어도 별도 제거/유지 선택창 없이 곧바로 덮어써서 업그레이드한다
+//     (크롬·VS코드 등도 쓰는 표준 방식 — AppId 고정으로 Inno가 알아서 같은 설치 위치에
+//     덮어씀, [Files]의 ignoreversion으로 파일 교체). 예전엔 "제거하시겠습니까?" 확인창을
+//     먼저 띄웠는데, 실제로 필요한 기능이 아니었고 오히려 형이 8월4일 실제 데이터 손실을
+//     겪은 뒤로 이 창을 볼 때마다 불안해해서(8월6일 재발) 2026-08-07에 폐지함
+//     ([[feedback_destructive_dialog_wording_precision]] 참고, 다른 K-앱들과 동일 조치).
+//     이 창이 실행하던 "구버전 제거 프로그램을 Exec로 직접 실행"하는 경로 자체가
+//     사라졌으므로, 이제 데이터 삭제는 사용자가 [프로그램 제거]에서 직접 제거할 때
+//     체크박스(기본 미체크)를 스스로 체크하는 경우 외엔 발생할 수 없다.
+//  2) 프로그램 실행 중이면 종료 확인창
+//  3) 설치 위치 표시 (Inno 기본 DirPage. ⚠ 단, 1)에서 "먼저 제거하기"를 없앤 뒤로는
+//     [Setup]에 DisableDirPage=no를 명시해야만 뜬다 — 기본값 auto가 "이전 설치가 있으면
+//     이 화면 건너뛰기"라서, 업그레이드할 땐 항상 건너뛰어버리기 때문. 위 [Setup] 참고)
+//  4) 완료 화면에 프로그램 실행([Run] 기본 제공) + 바탕화면 바로가기 체크란(아래 커스텀 컨트롤,
+//     기본 체크)
 
-const
-  // AppId({{7A2F4B1C-...})에 대응하는 Inno 언인스톨 레지스트리 키.
-  // 2026-08-06: PrivilegesRequired=admin으로 바꾼 뒤부터 Inno가 이 키를 HKCU가 아니라 HKLM에
-  // 쓴다(Inno 6.7.1 소스 Setup.Install.pas의 RootKey := InstallModeRootKey 확인). 예전
-  // lowest 시절에 설치된 버전은 아직 HKCU에 남아있을 수 있으므로 아래 GetUninstallString은
-  // HKCU → HKLM 순서로 둘 다 조회한다. 둘 중 어느 쪽을 찾아도 제거는 정상 동작한다.
-  UninstallRegKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7A2F4B1C-9E3D-4F6A-B8C2-1D5E7F9A3B6C}_is1';
-
-function GetUninstallString(): String;
-var
-  s: String;
-begin
-  s := '';
-  if not RegQueryStringValue(HKCU, UninstallRegKey, 'UninstallString', s) then
-    RegQueryStringValue(HKLM, UninstallRegKey, 'UninstallString', s);
-  Result := s;
-end;
-
-// 1단계: 이미 설치돼있으면 제거/유지부터 물어봄
-function InitializeSetup(): Boolean;
-var
-  uninst: String;
-  code: Integer;
-begin
-  Result := True;
-  uninst := GetUninstallString();
-  if uninst <> '' then
-  begin
-    if MsgBox('K-Zone이 이미 설치되어 있습니다.'#13#10#13#10'기존 버전을 제거하시겠습니까? (어느 쪽을 선택해도 저장된 레이아웃·설정 데이터는 삭제되지 않습니다)'#13#10#13#10'[예] 기존 버전을 완전히 제거한 뒤, 이어서 새로 설치합니다.'#13#10'[아니오] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.',
-       mbConfirmation, MB_YESNO) = IDYES then
-    begin
-      // ── 2026-08-06 원인 규명 (Inno Setup 6.7.1 소스 대조로 확정) ──────────────────
-      // 여기서 Setup.exe 자신({srcexe})을 다시 실행하려던 두 번의 시도가 실패한 진짜 이유:
-      // Inno가 의도적으로 막고 있다. Setup.ScriptFunc.pas의 Exec/ShellExec 구현은 매번
-      //     if not IsProtectedSrcExe(Filename) then <실행> else <False + ERROR_ACCESS_DENIED>
-      // 를 거치는데, Setup.ScriptFunc.HelperFunc.pas의 IsProtectedSrcExe는
-      //     (MainForm = nil) or (MainForm.CurStep < ssInstall) 인 동안
-      //     PathExpand(Filename) = SetupLdrOriginalFilename({srcexe}) 이면 True
-      // 를 반환한다. InitializeSetup 시점엔 MainForm이 아직 nil이므로 조건이 100% 성립 →
-      // CreateProcess/ShellExecuteEx를 아예 호출조차 하지 않고 그냥 실패시킨다.
-      // 그래서 Exec판은 반환값을 안 봐서 "아무 일도 안 일어남", ShellExec판은 False가
-      // 돌아와서 에러 메시지가 떴던 것. UAC도, SFX 임시폴더도, 파일 잠금도 원인이 아니었다
-      // (SetupLdr은 Setup.tmp를 띄우기 전에 이미 FreeAndNil(SourceF)로 원본 핸들을 닫는다).
-      // ErrorCode를 찍어봤다면 5(ERROR_ACCESS_DENIED)가 나왔을 것이고, 재실행 방식으로는
-      // 어떤 인자를 줘도 이 단계에선 통과할 수 없다.
-      //
-      // ── 그래서 재실행을 아예 없앴다 ─────────────────────────────────────────────
-      // 제거를 끝낸 뒤 Setup.exe를 새로 띄울 이유가 애초에 없다. InitializeSetup 시점엔 이
-      // 설치 프로그램이 아직 아무것도 건드리지 않은 상태라, 언인스톨러가 끝나면 그대로
-      // Result := True로 진행하면 그게 곧 "제거 후 새로 설치"다. 프로세스도 하나, UAC도
-      // 한 번, 중간에 끊기는 지점도 없다.
-      // 이때 Exec(..., ewWaitUntilTerminated)가 제거가 끝날 때까지 실제로 기다리는지가
-      // 관건인데, Inno 6 언인스톨러는 자기를 %TEMP%로 복사해 2단계(_unins.tmp)로 재실행한
-      // 뒤에도 1단계 프로세스(unins000.exe)를 살려두고 MsgWaitForMultipleObjects로 대기하다가,
-      // 2단계가 파일·레지스트리를 전부 지운 다음 보내는 WM_KillFirstPhase를 받고 나서야
-      // 종료한다(Setup.Uninstall.pas RunFirstPhase/RunSecondPhase 확인). 즉 Exec가 돌아온
-      // 시점엔 언인스톨 레지스트리 키까지 이미 지워진 뒤라 그대로 이어서 설치해도 안전하다.
-      Exec(RemoveQuotes(uninst), '', '', SW_SHOW, ewWaitUntilTerminated, code);
-
-      // 제거가 실제로 끝났는지는 종료 코드 말고 레지스트리(사실상의 근거)로 확인한다.
-      // 사용자가 제거 확인창에서 취소했거나 제거가 실패하면 키가 그대로 남아있다.
-      if GetUninstallString() <> '' then
-      begin
-        if MsgBox('기존 버전 제거가 완료되지 않았습니다. (제거를 취소하셨을 수 있습니다)'#13#10#13#10'[예] 제거하지 않고 이 위에 덮어 설치(업데이트)합니다.'#13#10'[아니오] 설치를 종료합니다.',
-           mbConfirmation, MB_YESNO) <> IDYES then
-          Result := False;
-      end;
-    end;
-  end;
-end;
-
-// 3단계 보조: K-Zone.exe가 실행 중인지 tasklist로 확인
+// 2단계 보조: K-Zone.exe가 실행 중인지 tasklist로 확인
 function IsAppRunning(): Boolean;
 var
   code: Integer;
@@ -153,7 +102,7 @@ begin
   Result := (code = 0);
 end;
 
-// 3단계: 파일 복사 직전, 실행 중이면 종료 확인 후 강제 종료(트레이 상주라 RestartManager가 못 잡음)
+// 2단계: 파일 복사 직전, 실행 중이면 종료 확인 후 강제 종료(트레이 상주라 RestartManager가 못 잡음)
 // 0.6초 한 번만 기다리고 넘어가면, 안티바이러스 스캔 지연이나 무언가가 곧바로 재실행시키는
 // 경우 파일 핸들이 아직 안 풀려서 DeleteFile 액세스 거부로 설치가 깨졌다(2026-08-04 형이 실제
 // 재현). 죽었는지 다시 확인하면서 여러 번 재시도하도록 강화한다.
@@ -192,7 +141,7 @@ begin
   end;
 end;
 
-// 5단계 보조: 완료 화면에 "바탕화면에 바로가기 만들기" 체크박스를 직접 그려 넣는다.
+// 4단계 보조: 완료 화면에 "바탕화면에 바로가기 만들기" 체크박스를 직접 그려 넣는다.
 // Inno의 [Tasks]는 완료 화면이 아니라 그 앞 "추가 작업 선택" 화면에 뜨므로, 완료 화면에
 // 놓으려면 [Icons]로 선언하는 대신 여기서 WScript.Shell로 직접 바로가기를 만든다.
 var
@@ -232,7 +181,8 @@ begin
   end;
 end;
 
-// 2단계: 애플리케이션 데이터 삭제 여부를 체크박스(기본 체크 해제)로 확인.
+// [제거할 때] 애플리케이션 데이터 삭제 여부를 체크박스(기본 체크 해제)로 확인.
+// (설치 흐름 1~4단계와는 별개 — 사용자가 [프로그램 제거]를 직접 실행했을 때만 탄다)
 // 예/아니오 팝업이었던 걸 K-Clock과 같은 체크박스 방식으로 통일(2026-08-04 형 요청).
 // Inno 기본 "정말 제거하시겠습니까?" 확인창은 InitializeUninstall 직후에 뜨므로, 우리
 // 체크박스 창을 거기 겹치게 InitializeUninstall에서 띄우면 확인창이 연달아 두 번 뜬다
@@ -298,7 +248,24 @@ begin
     // 바탕화면 바로가기는 이제 [Icons]가 아니라 완료 화면에서 스크립트로 직접 만들기 때문에
     // Inno의 자동 제거 대상이 아니다 — 여기서 직접 지운다(있으면).
     DeleteFile(ExpandConstant('{autodesktop}\{#MyAppName}.lnk'));
+
+    // ── 자동 실행 흔적 정리 (2026-08-25 추가) ────────────────────────────────
+    // K-Zone은 설정에서 "자동 실행"을 켜면 App.xaml.cs의 SetAutoStart가 런타임에
+    // 아래 3가지를 직접 만든다. [Registry]의 uninsdeletevalue는 "설치할 때 [Tasks]
+    // 체크로 만들어진 항목"만 지우므로, 앱 안에서 켠 경우엔 제거 후에도 그대로 남아
+    // 부팅 때마다 없어진 exe를 실행하려 든다 — 여기서 전부 정리한다.
+    // (데이터가 아니라 쓰레기 항목이므로 아래 체크박스와 무관하게 항상 지운다)
+    RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', '{#MyAppName}');
+    RegDeleteValue(HKCU, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run', '{#MyAppName}');
+    DeleteFile(ExpandConstant('{userstartup}\{#MyAppName}.lnk'));
+
     if DeleteDataOnUninstall then
-      DelTree(ExpandConstant('{localappdata}\K-Zone'), True, True, True);
+    begin
+      // 설정·레이아웃 (SettingsManager: LocalApplicationData\K-Zone\settings.json)
+      DelTree(ExpandConstant('{localappdata}\{#MyAppName}'), True, True, True);
+      // 크래시 로그 (App.xaml.cs WriteCrashLog: ApplicationData(Roaming)\K-Zone\crash.log)
+      // — 저장 위치가 두 군데로 갈려 있어서 여기까지 지워야 "데이터 삭제"가 실제로 완전해진다.
+      DelTree(ExpandConstant('{userappdata}\{#MyAppName}'), True, True, True);
+    end;
   end;
 end;
