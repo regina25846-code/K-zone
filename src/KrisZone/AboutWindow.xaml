@@ -214,9 +214,14 @@
                                                             </Path>
                                                         </Border>
                                                         <ControlTemplate.Triggers>
+                                                            <!-- ⚠️ Trigger.EnterActions/ExitActions(프로퍼티 엘리먼트)는
+                                                                 Setter들(암묵적 콘텐츠) 앞이나 뒤에 몰아서 와야 한다 —
+                                                                 중간에 끼면 "Property elements cannot be in the middle
+                                                                 of an element's content" 컴파일 에러(2026-08-25 실측). -->
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <!-- .x:hover : background glass-solid, color ink -->
                                                                 <Setter TargetName="Bd" Property="Border.Background" Value="#D6FFFFFF"/>
+                                                                <Setter TargetName="XIcon" Property="Shape.Stroke" Value="#141922"/>
                                                                 <Trigger.EnterActions>
                                                                     <BeginStoryboard>
                                                                         <Storyboard>
@@ -235,7 +240,6 @@
                                                                         </Storyboard>
                                                                     </BeginStoryboard>
                                                                 </Trigger.ExitActions>
-                                                                <Setter TargetName="XIcon" Property="Shape.Stroke" Value="#141922"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
