@@ -72,18 +72,32 @@ namespace KrisZone.Models
 
     public class AppSettings
     {
-        public bool ShiftDrag { get; set; } = true;
-        public bool CtrlMultiSelect { get; set; } = true;
-        public bool MakeDraggedWindowTransparent { get; set; } = true;
-        public bool ShowZoneNumber { get; set; } = true;
-        public bool OverrideSnapHotkeys { get; set; } = false;
-        public bool AlwaysOnTopEnabled { get; set; } = true;
-        public string AlwaysOnTopBorderColor { get; set; } = "#8B95A5";
-        public string ZoneColor { get; set; } = "#BAE6FD";
-        public string ZoneBorderColor { get; set; } = "#FFFFFF";
-        public string ZoneHighlightColor { get; set; } = "#38BDF8";
-        public string ZoneNumberColor { get; set; } = "#FFFFFF";
-        public int ZoneHighlightOpacity { get; set; } = 30;
+        // ── 외형/동작 설정: 설정창을 없애고 파워토이즈 실제 기본값으로 고정 (2026-08-29) ──
+        //
+        // ⚠ 일부러 get 전용이다. System.Text.Json은 get 전용 프로퍼티를 "쓸 때는 파일에 남기고,
+        //   읽을 때는 무시"하기 때문에, 예전 settings.json에 남아있는 옛 값이 있어도 항상 아래
+        //   고정값이 적용된다(별도 마이그레이션 코드가 필요 없다).
+        //   반대로 Layouts/MonitorConfigs는 get; set; 그대로라 사용자가 만든 레이아웃과
+        //   모니터 배치는 종전대로 저장·복원된다 — 여기는 절대 건드리지 말 것.
+        //
+        // 출처: PowerToys FancyZonesLib/Settings.h (C++ 실제 동작 기준)
+        //   shiftDrag = true / showZoneNumber = true / overrideSnapHotkeys = false
+        //   zoneColor = "#AACDFF" / zoneHighlightColor = "#008CFF" / zoneHighlightOpacity = 50
+        public bool ShiftDrag { get; } = true;
+        public bool ShowZoneNumber { get; } = true;
+        public bool OverrideSnapHotkeys { get; } = false;
+        public string ZoneColor { get; } = "#AACDFF";
+        public string ZoneHighlightColor { get; } = "#008CFF";
+        public int ZoneHighlightOpacity { get; } = 50;
+
+        // 드래그 중 창 투명화는 팬시존에 없는 K-Zone 고유 기능 — 기존 기본값 유지.
+        public bool MakeDraggedWindowTransparent { get; } = true;
+
+        // 출처: PowerToys AlwaysOnTopProperties.cs — DefaultFrameEnabled = true.
+        // 테두리 색/두께는 AccentColor.cs가 담당한다(강조색 자동 추종, DefaultFrameThickness = 4).
+        public bool AlwaysOnTopEnabled { get; } = true;
+
+        // ── 사용자 데이터 (계속 저장/복원됨) ──
         public List<ZoneLayout> Layouts { get; set; } = new();
         public List<MonitorConfig> MonitorConfigs { get; set; } = new();
     }

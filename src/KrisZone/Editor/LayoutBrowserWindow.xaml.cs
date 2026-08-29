@@ -18,6 +18,9 @@ namespace KrisZone.Editor
         private Border? _activeCard;
 
         private static readonly Color AccentColor  = Color.FromRgb(0x2E, 0x42, 0x72);
+        // 눌림 상태용 더 진한 네이비 — 이 앱이 이미 쓰는 토큰(새 레이아웃 버튼 호버,
+        // 안내패널 저장 버튼 호버, 합치기 버튼 그림자와 같은 값).
+        private static readonly Color AccentDeep   = Color.FromRgb(0x1E, 0x2E, 0x54);
         private static readonly Color DarkColor    = Color.FromRgb(0x22, 0x25, 0x2B);
         private static readonly Color GrayColor    = Color.FromRgb(0x56, 0x5B, 0x65);
         private static readonly Color LineGray     = Color.FromRgb(0xDE, 0xD9, 0xD1);
@@ -211,7 +214,13 @@ namespace KrisZone.Editor
                 VerticalAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(4, 0, 0, 0),
                 ToolTip = "레이아웃 편집",
+                // ⚠ Background=Transparent만으로는 호버 하이라이트가 안 없어진다. WPF 기본 Button
+                //   템플릿이 자체 IsMouseOver 트리거로 하늘색 그라디언트를 칠하기 때문에, 우리가
+                //   준 Background은 그때 무시된다. 기본 크롬이 아예 없는 템플릿으로 교체해야 한다.
+                Template = BuildFlatIconButtonTemplate(),
             };
+            // 호버·눌림 표현은 BuildFlatIconButtonTemplate() 안 트리거가 전담한다
+            // (배경 박스 없이 글리프 색만 바뀌는 방식 — About 창 × 버튼과 같은 언어).
 
             Grid.SetColumn(nameText, 0);
             Grid.SetColumn(editBtn, 1);
@@ -311,9 +320,51 @@ namespace KrisZone.Editor
             Close();
         }
 
+        // 기본 Button 크롬(호버 하늘색 하이라이트, 테두리, 눌림 효과)이 전혀 없는 아이콘 버튼 템플릿.
+        // Background은 Transparent로 둔다 — null이면 아이콘 글리프 바깥 여백이 히트테스트를
+        // 통과해버려서 클릭 판정이 글자 획에만 걸린다.
+        private static ControlTemplate BuildFlatIconButtonTemplate()
+        {
+            var template = new ControlTemplate(typeof(Button));
+
+            var border = new FrameworkElementFactory(typeof(Border));
+            border.Name = "Bd";                       // 아래 트리거가 TargetName으로 지목한다
+            border.SetValue(Border.BackgroundProperty, Brushes.Transparent);
+            border.SetValue(Border.PaddingProperty, new TemplateBindingExtension(Control.PaddingProperty));
+            // 눌렸을 때 1px 내려앉히기 위한 자리. Freezable이라 나중에 통째로 갈아끼운다.
+            border.SetValue(UIElement.RenderTransformProperty, new TranslateTransform(0, 0));
+
+            var presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            border.AppendChild(presenter);
+
+            template.VisualTree = border;
+
+            // 상태 표현을 전부 템플릿 한 곳에 모은다(예전엔 호버만 MouseEnter/Leave 핸들러로
+            // 처리했는데, 눌림까지 생기면서 두 군데로 갈라지면 상태가 어긋나기 쉬워진다).
+            // ⚠ 트리거는 나중에 등록된 것이 이긴다 — 눌림이 호버를 덮어야 하므로 순서가 중요.
+            //   Border에 TextBlock.Foreground(= TextElement.Foreground와 같은 DP)를 걸면 Button보다 가까운 조상이라
+            //   ContentPresenter가 만든 글리프에 그 값이 적용된다.
+            var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+            hover.Setters.Add(new Setter(TextBlock.ForegroundProperty, new SolidColorBrush(AccentColor), "Bd"));
+            template.Triggers.Add(hover);
+
+            var pressed = new Trigger { Property = System.Windows.Controls.Primitives.ButtonBase.IsPressedProperty, Value = true };
+            pressed.Setters.Add(new Setter(TextBlock.ForegroundProperty, new SolidColorBrush(AccentDeep), "Bd"));
+            pressed.Setters.Add(new Setter(UIElement.RenderTransformProperty, new TranslateTransform(0, 1), "Bd"));
+            template.Triggers.Add(pressed);
+
+            return template;
+        }
+
         private void OpenEditorForLayout(ZoneLayout layout)
         {
             if (_selectedMonitor == null) return;
+            // 연필 버튼을 연속으로 눌러도 편집창이 겹쳐 뜨지 않게 — 이미 떠 있으면 그 창을
+            // 앞으로 가져오기만 한다(별도 안내 없이).
+            if (MonitorOverlayEditor.TryActivateExisting()) return;
+
             var editor = new MonitorOverlayEditor(_selectedMonitor, layout.Id);
             editor.Closed += (_, _) => BuildLayoutCards();
             editor.Show();

@@ -13,33 +13,133 @@
         <!-- Zone Preview Canvas -->
         <Canvas x:Name="Preview" Background="Transparent"/>
 
-        <!-- Resizer Adorner Layer -->
-        <Canvas x:Name="AdornerLayer" Background="Transparent" IsHitTestVisible="True"/>
+        <!-- Resizer Adorner Layer
+             ⚠⚠ Background을 절대 지정하지 말 것(Transparent 포함).
+             이 Canvas는 Grid의 같은 칸에 들어있어 창 전체로 늘어나고, Preview보다 뒤에
+             선언돼 있어 z-order상 존들 위에 깔린다. WPF에서 Background이 null이면 그 요소
+             자체는 히트테스트를 통과시켜 밑(Preview의 존 Border)으로 마우스 이벤트가
+             내려가지만, Transparent라도 "값이 있으면" 그 요소가 창 전체에서 이벤트를
+             가로챈다. 실제로 이 한 줄 때문에 최초 커밋(7ab43a8, 2026-07-02)부터
+             존이 마우스 이벤트를 단 한 번도 못 받았다 — 존 호버 커서(Hand)도 안 바뀌고,
+             분할 미리보기선도, 존 클릭 분할도, 존 가로질러 드래그하는 합치기도 전부
+             동작하지 않았다. 반면 리사이저 Thumb은 이 Canvas의 자식이라 정상 동작했고,
+             S키 분할은 히트테스트 없이 좌표 계산만 하므로 정상 동작해서 증상이 가려져 있었다.
+             자식(Thumb)은 부모 Background과 무관하게 그대로 히트테스트되므로 지워도 안전하다. -->
+        <Canvas x:Name="AdornerLayer" IsHitTestVisible="True"/>
 
-        <!-- Merge selection panel -->
-        <Canvas x:Name="MergePanel" Background="Transparent" Visibility="Collapsed">
-            <StackPanel x:Name="MergeButtons" Orientation="Horizontal" Background="#FCFBF9">
-                <StackPanel.Resources>
-                    <Style TargetType="Button">
-                        <Setter Property="Foreground" Value="White"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Padding" Value="14,7"/>
-                        <Setter Property="FontSize" Value="13"/>
+        <!-- Merge selection panel
+             이쪽 Background="Transparent"는 의도된 것 — 합치기 버튼이 떠 있는 동안은
+             바깥을 클릭하면 취소되는 백드롭 역할을 한다(파워토이즈 GridEditor.xaml의
+             MergePanel MouseUp="MergePanelMouseUp"과 동일). Collapsed일 땐 히트테스트
+             대상이 아니므로 평소 조작을 막지 않는다. -->
+        <Canvas x:Name="MergePanel" Background="Transparent" Visibility="Collapsed"
+                MouseUp="MergePanelMouseUp">
+            <!-- 합치기 액션바 — About 창/안내패널과 같은 Spatial Light Glass 문법으로 재설계.
+                 색은 편집기 기존 팔레트(네이비 #2E4272, 크림 #FCFBF9, 헤어라인 #DED9D1)를 쓰고
+                 문법(둥근 카드 + 헤어라인 + 레이어드 그림자 + 윗변 광택 + 호버 상승)만 이식했다. -->
+            <Border x:Name="MergeButtons"
+                    Background="#FCFBF9" BorderBrush="#DED9D1" BorderThickness="1"
+                    CornerRadius="12" Padding="6">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Direction="270"
+                                      Color="#121C36" Opacity="0.22"/>
+                </Border.Effect>
+                <Border.Resources>
+                    <!-- 주 버튼(합치기): 네이비 그라디언트 + 윗변 1px 광택 + 접지 그림자 -->
+                    <Style x:Key="MergePrimary" TargetType="Button">
                         <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Padding" Value="13,7"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                                    <Border x:Name="Bd" CornerRadius="8"
+                                            BorderThickness="0,1,0,0" BorderBrush="#57FFFFFF"
+                                            Padding="{TemplateBinding Padding}"
+                                            RenderTransformOrigin="0.5,0.5">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0.6,1">
+                                                <GradientStop Color="#3A5490" Offset="0"/>
+                                                <GradientStop Color="#2E4272" Offset="0.55"/>
+                                                <GradientStop Color="#243459" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="3" Direction="270"
+                                                              Color="#1E2E54" Opacity="0.42"/>
+                                        </Border.Effect>
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
+                                    <ControlTemplate.Triggers>
+                                        <!-- ⚠ Setter들과 Trigger.EnterActions를 섞으면 컴파일 에러가 나므로
+                                             (K-Zone 1.2.2-7 실측) 애니메이션 없이 Setter만 쓴다. -->
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="RenderTransform">
+                                                <Setter.Value><TranslateTransform Y="-1"/></Setter.Value>
+                                            </Setter>
+                                            <Setter TargetName="Bd" Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="15" ShadowDepth="5" Direction="270"
+                                                                      Color="#1E2E54" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
                     </Style>
-                </StackPanel.Resources>
-                <Button Content="합치기" Background="#2E4272" Click="MergeClick" Margin="0,0,4,0"/>
-                <Button Content="취소" Background="#565B65" Click="MergeCancelClick"/>
-            </StackPanel>
+
+                    <!-- 보조 버튼(취소): 유리 톤 + 헤어라인 -->
+                    <Style x:Key="MergeSecondary" TargetType="Button">
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Padding" Value="13,7"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd" CornerRadius="8"
+                                            Background="#FFFFFF" BorderBrush="#DED9D1" BorderThickness="1"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#ECE9E3"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Border.Resources>
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource MergePrimary}" Click="MergeClick" Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal">
+                            <!-- 안내패널의 "합치기" 아이콘과 같은 글리프(사각 프레임 + 끊긴 가운데 선) -->
+                            <Viewbox Width="13" Height="13" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M 3,5 H 21 V 19 H 3 Z" Stroke="White" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    <Path Data="M 12,5 V 8.5" Stroke="White" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Path Data="M 12,15.5 V 19" Stroke="White" StrokeThickness="2.2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="합치기" FontSize="13" FontWeight="Bold" Foreground="White"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect BlurRadius="2" ShadowDepth="1" Direction="270"
+                                                      Color="#000000" Opacity="0.26"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource MergeSecondary}" Click="MergeCancelClick">
+                        <TextBlock Text="취소" FontSize="13" Foreground="#22252B" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Border>
         </Canvas>
 
         <!-- 파워토이즈 방식 인트로 팝업 (저장 전까지 유지) -->
@@ -50,9 +150,131 @@
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="30" ShadowDepth="0" Opacity="0.25"/>
             </Border.Effect>
+            <!-- 사용법 안내 힌트(파워토이즈 FancyZones 스타일, 오푸스 정식설계)에서만 쓰는 스타일 —
+                 IntroPanel 스코프로 한정해서 다른 화면엔 영향 없음. -->
+            <Border.Resources>
+                <Style x:Key="HintIconTile" TargetType="Border">
+                    <Setter Property="Width" Value="26"/>
+                    <Setter Property="Height" Value="26"/>
+                    <Setter Property="CornerRadius" Value="8"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="BorderBrush" Value="#DED9D1"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+                <Style x:Key="HintIconPath" TargetType="Path">
+                    <Setter Property="Stroke" Value="#2E4272"/>
+                    <Setter Property="StrokeThickness" Value="2.2"/>
+                    <Setter Property="StrokeStartLineCap" Value="Round"/>
+                    <Setter Property="StrokeEndLineCap" Value="Round"/>
+                    <Setter Property="StrokeLineJoin" Value="Round"/>
+                </Style>
+                <Style x:Key="HintKeyCap" TargetType="Border">
+                    <Setter Property="CornerRadius" Value="4"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="BorderBrush" Value="#DED9D1"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Padding" Value="5,0,5,1"/>
+                    <Setter Property="Margin" Value="1,0,1,0"/>
+                </Style>
+                <Style x:Key="HintKeyCapText" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="10.5"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Foreground" Value="#2E4272"/>
+                </Style>
+                <Style x:Key="HintLabel" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="12.5"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Foreground" Value="#22252B"/>
+                    <Setter Property="Margin" Value="0,0,0,2"/>
+                </Style>
+                <Style x:Key="HintDesc" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="Foreground" Value="#565B65"/>
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                    <Setter Property="LineHeight" Value="19"/>
+                    <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+                </Style>
+            </Border.Resources>
             <StackPanel>
-                <TextBlock FontSize="19" FontWeight="SemiBold" Foreground="#22252B" Margin="0,0,0,20"
+                <TextBlock FontSize="19" FontWeight="SemiBold" Foreground="#22252B" Margin="0,0,0,16"
                            Text="K-Zone 레이아웃 편집기"/>
+
+                <!-- .rule : 양끝이 사라지는 헤어라인 (AboutWindow와 동일 규격) -->
+                <Rectangle Height="1" Margin="0,0,0,14">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00121C36" Offset="0"/>
+                            <GradientStop Color="#17121C36" Offset="0.18"/>
+                            <GradientStop Color="#17121C36" Offset="0.82"/>
+                            <GradientStop Color="#00121C36" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <!-- 마이크로라벨 "사용법" (글자 사이 얇은 공백 2종으로 자간 벌림) -->
+                <TextBlock FontSize="10" FontWeight="Bold" Foreground="#8A8E97" Margin="0,0,0,10">사&#x2009;&#x200A;용&#x2009;&#x200A;법</TextBlock>
+
+                <!-- 사용법 힌트 3행 -->
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 1행: 분할 -->
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource HintIconTile}" VerticalAlignment="Top">
+                        <Viewbox Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M 3,5 H 21 V 19 H 3 Z" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 12,5 V 19" Style="{StaticResource HintIconPath}"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <StackPanel Grid.Row="0" Grid.Column="2">
+                        <TextBlock Text="분할" Style="{StaticResource HintLabel}"/>
+                        <TextBlock Style="{StaticResource HintDesc}"><Run Text="존을 클릭하면 그 자리에서 나뉩니다. "/><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="Shift" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><Run Text="를 누르면 방향이 바뀝니다."/></TextBlock>
+                    </StackPanel>
+
+                    <!-- 2행: 합치기 · 삭제 -->
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource HintIconTile}" VerticalAlignment="Top">
+                        <Viewbox Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M 3,5 H 21 V 19 H 3 Z" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 12,5 V 8.5" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 12,15.5 V 19" Style="{StaticResource HintIconPath}"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <StackPanel Grid.Row="2" Grid.Column="2">
+                        <TextBlock Text="합치기 · 삭제" Style="{StaticResource HintLabel}"/>
+                        <TextBlock Text="여러 존을 가로질러 드래그하세요." Style="{StaticResource HintDesc}"/>
+                    </StackPanel>
+
+                    <!-- 3행: 키보드 -->
+                    <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource HintIconTile}" VerticalAlignment="Top">
+                        <Viewbox Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M 3,6.5 H 21 V 17.5 H 3 Z" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 7,10.5 H 8" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 11.5,10.5 H 12.5" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 16,10.5 H 17" Style="{StaticResource HintIconPath}"/>
+                                <Path Data="M 8.5,14 H 15.5" Style="{StaticResource HintIconPath}"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <StackPanel Grid.Row="4" Grid.Column="2">
+                        <TextBlock Text="키보드" Style="{StaticResource HintLabel}"/>
+                        <TextBlock Style="{StaticResource HintDesc}"><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="Tab" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><Run Text=" 이동 · "/><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="S" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><Run Text=" 분할 · "/><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="Del" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><Run Text=" 구분선 삭제 · "/><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="←" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><InlineUIContainer BaselineAlignment="Center"><Border Style="{StaticResource HintKeyCap}"><TextBlock Text="→" Style="{StaticResource HintKeyCapText}"/></Border></InlineUIContainer><Run Text=" 조절"/></TextBlock>
+                    </StackPanel>
+                </Grid>
 
                 <!-- 저장/취소 버튼 -->
                 <Grid>

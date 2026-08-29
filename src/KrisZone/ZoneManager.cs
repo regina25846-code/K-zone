@@ -53,51 +53,52 @@ namespace KrisZone
             return -1;
         }
 
-        // 배치 후 shadow inset 측정하여 보정.
-        // 한 번의 측정값으로 한 번만 보정하면(예전 방식) 같은 창을 같은 zone에 다시 배치할 때
-        // shadow inset이 처음 측정값과 달라지는 경우(재배치 직전 창 상태에 따라 값이 흔들림)
-        // 과보정/저보정이 나서 왼쪽위로 밀리거나 여백이 남는 문제가 있었음.
-        // "현재 보이는 영역(fr)이 목표(px,py,pw,ph)와 얼마나 다른가"를 직접 측정해서 그 차이만큼만
-        // raw rect를 옮기는 방식으로 바꾸고, 이걸 값이 수렴할 때까지 최대 3번 반복함 — 어떤
-        // 이유로 틀어지든(타이밍, DPI, 이전 상태 등) 결국 목표에 맞춰짐.
-        private static void ApplyShadowCorrection(IntPtr hwnd, int px, int py, int pw, int ph)
+        // 파워토이즈 FancyZones 방식(오푸스가 microsoft/PowerToys의 WindowUtils.cpp/WorkArea.cpp
+        // 실제 소스와 대조해 확정, 2026-08-29). 창을 건드리기 "전" 안정 상태에서 wr(GetWindowRect,
+        // raw rect)과 fr(DwmGetWindowAttribute EXTENDED_FRAME_BOUNDS, 실제 보이는 영역)을 같은
+        // 시점에 1회만 읽어서 그림자 마진을 구한다. top은 보정하지 않음 — 그림자가 위로는 안 뻗기
+        // 때문(파워토이즈와 동일 관례). 예전의 "배치 후 재측정 → 최대 3회 반복 보정" 방식은
+        // 대상 창이 아직 자리를 못 잡은 상태(웨일처럼 느린 창)에서 재면 오차가 폭주해 창이 극단적
+        // 으로 쪼그라들고 반복 재배치 자체가 덜컹거림으로 보이는 문제가 있어 전량 제거.
+        private static (int left, int right, int bottom) GetShadowMargins(IntPtr hwnd)
         {
-            int curLeft = px, curTop = py, curRight = px + pw, curBottom = py + ph;
+            if (!NativeMethods.GetWindowRect(hwnd, out var wr)) return (0, 0, 0);
+            if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0)
+                return (0, 0, 0);
 
-            for (int attempt = 0; attempt < 3; attempt++)
-            {
-                NativeMethods.DwmFlush();
-                NativeMethods.GetWindowRect(hwnd, out var wr);
-                if (NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWA_EXTENDED_FRAME_BOUNDS,
-                        out var fr, System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.RECT>()) != 0) return;
+            int leftMargin = fr.Left - wr.Left;
+            int rightMargin = wr.Right - fr.Right;
+            int bottomMargin = wr.Bottom - fr.Bottom;
+            return (leftMargin, rightMargin, bottomMargin);
+        }
 
-                // 실제 보이는 영역(fr)이 목표(px,py,px+pw,py+ph)와 얼마나 어긋났는지
-                int errLeft = px - fr.Left;
-                int errTop = py - fr.Top;
-                int errRight = (px + pw) - fr.Right;
-                int errBottom = (py + ph) - fr.Bottom;
+        // 목표(px,py,pw,ph)는 "보이는 영역" 기준. raw rect는 그 바깥으로 마진만큼 확장해서
+        // SetWindowPos에 1회만 넘긴다. 최소화/최대화 복원을 여기로 모아서 SnapWindow든
+        // SnapWindowMulti(다중 존)든 어느 경로를 타든 자동으로 커버되게 함 — 마진 측정도
+        // 복원 "후"에 이뤄지도록 순서를 맞춤(복원 전에 재면 마진 값이 틀어짐).
+        private static void PlaceWindow(IntPtr hwnd, int px, int py, int pw, int ph)
+        {
+            if (NativeMethods.IsIconic(hwnd))
+                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+            if (NativeMethods.IsZoomed(hwnd))
+                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
 
-                if (errLeft == 0 && errTop == 0 && errRight == 0 && errBottom == 0) return;
+            var (leftMargin, rightMargin, bottomMargin) = GetShadowMargins(hwnd);
 
-                // raw rect(wr)를 오차만큼 보정 — fr이 wr 안에서 상대적으로 어디 있는지는 유지한 채
-                // 목표와의 차이만큼만 이동/확장
-                curLeft = wr.Left + errLeft;
-                curTop = wr.Top + errTop;
-                curRight = wr.Right + errRight;
-                curBottom = wr.Bottom + errBottom;
+            int finalLeft = px - leftMargin;
+            int finalTop = py;
+            int finalRight = px + pw + rightMargin;
+            int finalBottom = py + ph + bottomMargin;
 
-                NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
-                    curLeft, curTop, curRight - curLeft, curBottom - curTop,
-                    NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
-            }
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, finalLeft, finalTop,
+                finalRight - finalLeft, finalBottom - finalTop,
+                NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
         }
 
         // Snap window to zone (in logical coordinates → SetWindowPos uses physical)
         public static void SnapWindow(IntPtr hwnd, ZoneRect zone, MonitorInfo monitor)
         {
-            if (NativeMethods.IsIconic(hwnd))
-                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
-
             var r = ZoneToPixelRect(zone, monitor);
             double scale = monitor.ScaleFactor;
 
@@ -106,11 +107,7 @@ namespace KrisZone
             int pw = (int)Math.Round(r.Width * scale);
             int ph = (int)Math.Round(r.Height * scale);
 
-            // 1차: zone 크기로 배치
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
-                NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
-            // 2차: 배치 후 실제 shadow 측정하여 보정
-            ApplyShadowCorrection(hwnd, px, py, pw, ph);
+            PlaceWindow(hwnd, px, py, pw, ph);
         }
 
         // Snap to multiple zones (bounding box)
@@ -131,9 +128,7 @@ namespace KrisZone
             int pw = (int)Math.Round((maxX - minX) * scale);
             int ph = (int)Math.Round((maxY - minY) * scale);
 
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, px, py, pw, ph,
-                NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
-            ApplyShadowCorrection(hwnd, px, py, pw, ph);
+            PlaceWindow(hwnd, px, py, pw, ph);
         }
     }
 }

@@ -255,7 +255,11 @@ namespace KrisZone.Editor
             Zone closureZone = closure.Item2;
 
             _zones = _zones.FindAll(z => !closureSet.Contains(z.Index)).ToList();
-            _zones.Insert(lowestIndex, closureZone);
+            // ⚠ lowestIndex는 "지우기 전" 목록 기준 인덱스다. 위에서 폐포에 속한 존들을 먼저
+            //   제거했기 때문에 남은 개수보다 커질 수 있고, 그러면 Insert가
+            //   ArgumentOutOfRangeException을 던진다(Del로 구분선 삭제 시 실제 재현됨,
+            //   opus-reviewer 검증 2026-08-29). 남은 목록 끝을 넘지 않게 클램프한다.
+            _zones.Insert(Math.Min(lowestIndex, _zones.Count), closureZone);
 
             ZonesToMeta(_meta);
             FromMeta(_meta);
@@ -289,6 +293,7 @@ namespace KrisZone.Editor
 
         public bool CanDrag(int resizerIndex, int delta)
         {
+            if (resizerIndex < 0 || resizerIndex >= _resizers.Count) return false;
             var res = _resizers[resizerIndex];
             int minSize = res.Orientation == Orientation.Vertical ? MinZoneWidth : MinZoneHeight;
 

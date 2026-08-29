@@ -10,15 +10,12 @@ namespace KrisZone
     // WS_EX_TRANSPARENT를 걸어준다(WPF의 IsHitTestVisible만으론 부족함).
     public partial class PinBorderOverlay : Window
     {
-        public PinBorderOverlay(string colorHex)
+        public PinBorderOverlay()
         {
             InitializeComponent();
-            try
-            {
-                var color = (Color)ColorConverter.ConvertFromString(colorHex);
-                BorderRect.BorderBrush = new SolidColorBrush(color);
-            }
-            catch { BorderRect.BorderBrush = new SolidColorBrush(Colors.DeepSkyBlue); }
+            // 파워토이즈 AlwaysOnTop의 기본 테두리 두께(DefaultFrameThickness = 4).
+            BorderRect.BorderThickness = new Thickness(AccentColor.FrameThickness);
+            SetBorderColor(AccentColor.Current());
 
             SourceInitialized += (_, _) =>
             {
@@ -27,6 +24,13 @@ namespace KrisZone
                 NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE,
                     style | NativeMethods.WS_EX_TRANSPARENT | NativeMethods.WS_EX_LAYERED | NativeMethods.WS_EX_TOOLWINDOW);
             };
+        }
+
+        // 사용자가 윈도우 테마 강조색을 바꾸면 이미 핀 고정된 창의 테두리도 즉시 따라가야 한다
+        // (파워토이즈가 ColorValuesChanged에서 다시 그리는 것과 같은 동작).
+        internal void SetBorderColor(Color color)
+        {
+            BorderRect.BorderBrush = new SolidColorBrush(color);
         }
 
         internal void UpdateRect(NativeMethods.RECT r, double scale)

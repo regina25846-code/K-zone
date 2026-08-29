@@ -37,6 +37,20 @@ namespace KrisZone
             _cleanupTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
             _cleanupTimer.Tick += (_, _) => CleanupClosedWindows();
             _cleanupTimer.Start();
+
+            // 파워토이즈처럼 테마 강조색이 바뀌면 이미 고정된 창의 테두리도 재시작 없이 따라간다.
+            AccentColor.Changed += OnAccentChanged;
+            AccentColor.StartTracking();
+        }
+
+        // SystemEvents는 UI 스레드 보장이 없으므로 Dispatcher로 옮겨서 처리한다.
+        private void OnAccentChanged()
+        {
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                var color = AccentColor.Current();
+                foreach (var overlay in _pinned.Values) overlay.SetBorderColor(color);
+            });
         }
 
         public void Toggle(IntPtr hwnd)
@@ -55,7 +69,9 @@ namespace KrisZone
             NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
                 NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
 
-            var overlay = new PinBorderOverlay(SettingsManager.Current.AlwaysOnTopBorderColor);
+            // 테두리색은 설정값이 아니라 윈도우 테마 강조색을 그때그때 읽어서 쓴다
+            // (파워토이즈 AlwaysOnTop 기본값 frameAccentColor = true와 동일).
+            var overlay = new PinBorderOverlay();
             _pinned[hwnd] = overlay;
             RepositionOverlay(hwnd, overlay);
             overlay.Show();
@@ -115,6 +131,8 @@ namespace KrisZone
 
         public void Dispose()
         {
+            AccentColor.Changed -= OnAccentChanged;
+            AccentColor.StopTracking();
             if (_hookLocation != IntPtr.Zero) { NativeMethods.UnhookWinEvent(_hookLocation); _hookLocation = IntPtr.Zero; }
             _cleanupTimer?.Stop();
             foreach (var overlay in _pinned.Values) overlay.Close();

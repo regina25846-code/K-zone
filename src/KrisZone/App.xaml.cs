@@ -17,7 +17,6 @@ namespace KrisZone
         private AlwaysOnTopEngine? _alwaysOnTop;
         private System.Threading.Mutex? _singleInstanceMutex;
         private LayoutBrowserWindow? _layoutBrowserWindow;
-        private SettingsWindow? _settingsWindow;
         private AboutWindow? _aboutWindow;
 
         protected override void OnStartup(StartupEventArgs e)
@@ -175,7 +174,6 @@ namespace KrisZone
                 _trayMenu.Show(new[]
                 {
                     NativePopupMenu.Item.Entry("K-Zone 레이아웃 편집기", OpenLayoutBrowser),
-                    NativePopupMenu.Item.Entry("설정", OpenSettings),
                     NativePopupMenu.Item.Separator(),
                     NativePopupMenu.Item.Entry("시작 프로그램 등록", () => SetAutoStart(!IsAutoStartEnabled()), IsAutoStartEnabled()),
                     NativePopupMenu.Item.Separator(),
@@ -230,27 +228,12 @@ namespace KrisZone
             if (monitor == null) return;
             Dispatcher.Invoke(() =>
             {
+                // 편집기는 앱 전체에서 하나만 뜬다 — 이미 떠 있으면 그 창을 앞으로.
+                if (MonitorOverlayEditor.TryActivateExisting()) return;
+
                 var w = new MonitorOverlayEditor(monitor);
                 w.Show();
                 w.Activate();
-            });
-        }
-
-        private void OpenSettings()
-        {
-            Dispatcher.Invoke(() =>
-            {
-                if (_settingsWindow != null)
-                {
-                    if (_settingsWindow.WindowState == WindowState.Minimized)
-                        _settingsWindow.WindowState = WindowState.Normal;
-                    _settingsWindow.Activate();
-                    return;
-                }
-                _settingsWindow = new SettingsWindow();
-                _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-                _settingsWindow.Show();
-                _settingsWindow.Activate();
             });
         }
 
