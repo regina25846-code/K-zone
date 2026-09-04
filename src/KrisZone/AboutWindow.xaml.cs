@@ -67,6 +67,8 @@ namespace KrisZone
                     psi.Verb = "runas";
                 Process.Start(psi);
                 await System.Threading.Tasks.Task.Delay(500);
+                ExitLogger.Log("UPDATE_INSTALL_SHUTDOWN", "사용자 클릭",
+                    $"업데이트 설치를 위해 스스로 종료 (v{_currentVersion} → v{result.LatestVersion})");
                 System.Windows.Application.Current.Shutdown();
             }
             catch (Exception ex)
