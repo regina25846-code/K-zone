@@ -45,7 +45,7 @@ namespace KrisZone
                 }
 
                 if (downloadUrl == null)
-                    return new Result(false, latestVersion, null, "릴리즈에서 설치파일을 찾지 못함");
+                    return new Result(false, latestVersion, null, "릴리즈에 설치 파일이 없어요");
 
                 bool isNewer = CompareCoreVersions(latestVersion, currentVersion) > 0;
                 return new Result(isNewer, latestVersion, downloadUrl, null);

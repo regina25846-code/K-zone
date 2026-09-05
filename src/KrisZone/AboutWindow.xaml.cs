@@ -39,23 +39,23 @@ namespace KrisZone
 
             if (result.Error != null)
             {
-                StatusText.Text = $"업데이트 확인 실패: {result.Error} (잠시 후 다시 시도해주세요)";
+                StatusText.Text = $"업데이트를 확인하지 못했어요. 잠시 후 다시 시도해 주세요. ({result.Error})";
                 UpdateBtn.IsEnabled = true;
                 return;
             }
 
             if (!result.HasUpdate)
             {
-                StatusText.Text = "최신 버전 사용 중입니다.";
+                StatusText.Text = "최신 버전을 쓰고 있어요.";
                 UpdateBtn.IsEnabled = true;
                 return;
             }
 
-            StatusText.Text = "새 버전 발견, 다운로드 중...";
+            StatusText.Text = "새 버전이 있어요. 다운로드 중...";
             try
             {
                 var installerPath = await UpdateChecker.DownloadInstallerAsync(result.DownloadUrl!, result.LatestVersion!);
-                StatusText.Text = "다운로드 완료! 설치를 시작합니다...";
+                StatusText.Text = "다운로드 완료! 설치를 시작해요...";
                 var psi = new ProcessStartInfo(installerPath) { UseShellExecute = true };
                 // K-Zone은 다른 창을 관리하는 프로그램 특성상 형이 관리자 권한으로 실행해두는
                 // 경우가 실제로 있음(2026-08-06 실측 확인 — 일반 권한 설치 프로그램은 관리자
@@ -73,7 +73,7 @@ namespace KrisZone
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"다운로드 실패: {ex.Message}";
+                StatusText.Text = $"다운로드하지 못했어요. ({ex.Message})";
                 UpdateBtn.IsEnabled = true;
             }
         }
