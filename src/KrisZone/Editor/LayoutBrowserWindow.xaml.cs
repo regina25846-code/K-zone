@@ -28,6 +28,11 @@ namespace KrisZone.Editor
 
         private static readonly FontFamily UiFont = UiFonts.Pretendard;
 
+        // 레이아웃 이름은 편집기에서 길이 제한 없이 입력할 수 있다. 확인창 본문에 그대로
+        // 넣으면 이름 하나 때문에 창이 세로로 한없이 길어질 수 있어 표시용으로만 줄인다
+        // (실제로 지워지는 대상은 항상 원래 레이아웃 그대로다).
+        private const int NameShownMaxLength = 60;
+
         public LayoutBrowserWindow()
         {
             InitializeComponent();
@@ -265,6 +270,24 @@ namespace KrisZone.Editor
                 var deleteItem = new MenuItem { Header = "삭제" };
                 deleteItem.Click += (_, _) =>
                 {
+                    // 레이아웃은 모니터마다 직접 만든 자산인데 지우면 되돌릴 방법이 없고,
+                    // 우클릭 메뉴는 오조작이 쉬운 자리라 지우기 전에 한 번 물어본다.
+                    // 기본으로 잡히는 버튼은 "그만두기"라서, Enter나 Esc를 무심코 눌러도
+                    // 지워지지 않는다(ConfirmDialog 참고).
+                    string shown = string.IsNullOrEmpty(layoutRef.Name)
+                        ? "이름 없음"
+                        : layoutRef.Name.Length > NameShownMaxLength
+                            ? layoutRef.Name.Substring(0, NameShownMaxLength) + "…"
+                            : layoutRef.Name;
+
+                    bool confirmed = ConfirmDialog.Ask(
+                        this,
+                        "레이아웃을 지울까요?",
+                        $"\"{shown}\" 레이아웃을 지웁니다. 되돌릴 수 없습니다.",
+                        "지우기",
+                        "그만두기");
+                    if (!confirmed) return;
+
                     SettingsManager.Current.Layouts.Remove(layoutRef);
                     SettingsManager.Save();
                     BuildLayoutCards();

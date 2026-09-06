@@ -1,0 +1,329 @@
+<Window x:Class="KrisZone.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:KrisZone"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize"
+        Width="416" SizeToContent="Height"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        FontFamily="{x:Static local:UiFonts.Pretendard}"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         K-ZONE 공용 확인창 (ConfirmDialog)
+
+         이 앱 최초의 확인창이다. 이전까지 K-Zone에는 MessageBox가 단 한 번도
+         쓰인 적이 없었다(소스 전체 0건). 윈도우 기본 흰 상자를 쓰지 않고 앱
+         디자인으로 직접 만든다는 방침이라, 앞으로 추가될 다른 확인창도 전부
+         이 창(ConfirmDialog.Ask)을 재사용하도록 처음부터 문구를 인자로 받는
+         범용 창으로 만들었다.
+
+         ── 디자인 출처 (전부 K-Zone에 이미 있던 값. 새 색 발명 없음) ────────────
+         카드 셸        : MonitorOverlayEditor.xaml 의 IntroPanel(안내 패널)
+                          → 배경 #FCFBF9 · 헤어라인 #DED9D1 · 둥근 모서리 · 그림자
+         레이어드 그림자 : AboutWindow.xaml 의 "그림자 레이어 1/2" 수법
+                          (Effect를 중첩하면 '그림자의 그림자'가 생기므로, 같은
+                           크기·같은 라운드의 불투명 Border를 뒤에 깔고 각각
+                           Effect 하나씩만 건다. 카드가 불투명이라 뒤 레이어는
+                           그림자만 보인다.)
+         입체 버튼 문법  : MonitorOverlayEditor.xaml 의 MergePrimary/MergeSecondary
+                          + AboutWindow.xaml 의 UpdateBtn(UBd)
+                          → 세로 그라디언트 + 윗변 1px 흰 광택(#57FFFFFF)
+                          + 접지 그림자 + 호버 시 1~2px 떠오름
+         글자색         : 제목 #22252B · 본문 #565B65 (편집기/카드와 동일 토큰)
+         그림자 색      : #121C36 (About 창·합치기 액션바와 동일 토큰)
+         보조 호버      : #ECE9E3 (편집기의 취소 버튼 호버와 완전히 같은 값)
+         포커스 링      : #2E4272 (앱 강조 네이비)
+
+         ── 위험색 ────────────────────────────────────────────────────────────
+         K-Zone에 이미 있던 유일한 빨강은 #A94F47 이다
+         (MonitorOverlayEditor.xaml:352 — 편집기 닫기 ✕ 버튼 호버 글자색).
+         그것을 이 창의 위험색 기준값으로 그대로 쓴다.
+         입체 그라디언트에 필요한 밝은/어두운 짝은 새로 지어내지 않고, 이 앱의
+         네이비 계열이 실제로 쓰고 있는 명도·채도 간격을 HSL에서 그대로 옮겼다:
+
+           네이비(기존)                        빨강(이번에 파생)
+           #3A5490  L .396  S .426   →  밝게  #BC665E  L .553  S .412
+           #2E4272  L .314  S .425   기준값   #A94F47  L .471  S .408
+           #243459  L .245  S .424   →  어둡게 #90443D  L .402  S .405
+           #1E2E54  L .224  S .474   →  깊게  #8F3B33  L .380  S .474
+           (H 222° 고정)                        (H 5° 고정)
+
+         즉 색상(H)은 기존 위험색 #A94F47 그대로, 밝기·채도 단계만 이 앱이 이미
+         쓰던 간격을 복제했다. 흰 글자 대비: 기준값 5.39:1 / 가장 밝은 윗단
+         4.04:1 (글자는 세로 가운데=기준값 근처에 놓인다).
+
+         ── WPF 주의 (이 앱에서 실제로 겪은 것들) ────────────────────────────────
+         1) Setter들과 Trigger.EnterActions를 섞으면 컴파일 에러가 난다
+            (K-Zone 1.2.2-7 실측, MonitorOverlayEditor.xaml 주석). 그래서 상태
+            전이는 애니메이션 없이 Setter만 쓴다.
+         2) 트리거는 나중에 등록된 것이 이긴다. 눌림이 호버를 덮어야 하므로
+            IsPressed 트리거를 IsMouseOver 트리거보다 뒤에 둔다.
+         3) 눌림에서 BorderThickness는 바꾸지 않는다(바꾸면 안쪽 내용이 1px
+            밀려서 글자가 흔들린다). 두께는 그대로 두고 BorderBrush만 바꾼다.
+         4) 번들 폰트는 Pretendard Regular/Bold 두 종뿐이다. SemiBold/Medium을
+            쓰면 WPF가 있는 굵기로 스냅해서 위계가 뭉개지므로 Bold/Normal만 쓴다.
+         5) 창 바깥 Margin은 그림자가 그려질 자리다. AllowsTransparency 창이라
+            여백이 없으면 그림자가 창 경계에서 잘린다(About 창과 같은 이유).
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <Grid Margin="18,16,18,26">
+
+        <Grid.Resources>
+
+            <!-- ══ 위험 버튼(지우기) ══════════════════════════════════════════
+                 기본 : 아래로 어두워지는 그라디언트 + 윗변 흰 광택 + 접지 그림자
+                        → 빛이 위에서 오고 버튼이 떠 있는 것처럼 보인다
+                 호버 : 1px 떠오르고 그림자가 넓고 깊어진다(더 떠오름)
+                 눌림 : 1px 내려앉고, 그라디언트가 뒤집혀 위가 어두워지고,
+                        윗변 광택이 안쪽 어두운 선으로 바뀌며, 그림자가 얕아진다
+                        → 눌려서 오목하게 들어간 것처럼 보인다 -->
+            <Style x:Key="DangerButton" TargetType="Button">
+                <Setter Property="Cursor" Value="Hand"/>
+                <!-- 아래쪽만 1 큰 이유: 이 버튼은 윗변에만 1px 테두리가 있고 옆 '그만두기'는
+                     사방 1px이라, 여백을 같게 주면 두 버튼의 자연 높이가 1px 어긋난다.
+                     아래 여백을 1 늘려 둘의 전체 높이를 정확히 같게 맞춘다
+                     (글자는 위 1+9 / 아래 10 이라 여전히 정확히 가운데다). -->
+                <Setter Property="Padding" Value="20,9,20,10"/>
+                <Setter Property="MinWidth" Value="104"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd" CornerRadius="8"
+                                    BorderThickness="0,1,0,0" BorderBrush="#57FFFFFF"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <TranslateTransform Y="0"/>
+                                </Border.RenderTransform>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0.6,1">
+                                        <GradientStop Color="#BC665E" Offset="0"/>
+                                        <GradientStop Color="#A94F47" Offset="0.55"/>
+                                        <GradientStop Color="#90443D" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="10" ShadowDepth="3" Direction="270"
+                                                      Color="#8F3B33" Opacity="0.42"/>
+                                </Border.Effect>
+                                <!-- 여백을 Border.Padding이 아니라 ContentPresenter.Margin으로 주는 이유:
+                                     포커스 링을 버튼 안쪽에 같이 넣어야 눌릴 때 버튼과 함께 1px
+                                     내려가는데, Padding을 쓰면 링까지 20px 안쪽으로 밀려버린다.
+                                     (About 창 UpdateBtn도 같은 방식으로 Margin에 Padding을 건다) -->
+                                <Grid>
+                                    <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <!-- 키보드로 이 버튼에 와 있을 때만 보이는 안쪽 링.
+                                         빨간 바탕 위라 네이비는 안 보이므로 흰 링을 쓴다. -->
+                                    <Border x:Name="FocusRing" CornerRadius="6" Margin="2"
+                                            BorderThickness="1" BorderBrush="#CCFFFFFF"
+                                            Visibility="Collapsed" IsHitTestVisible="False"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+
+                                <!-- 호버: 떠오름 -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="RenderTransform">
+                                        <Setter.Value><TranslateTransform Y="-1"/></Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Bd" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="15" ShadowDepth="5" Direction="270"
+                                                              Color="#8F3B33" Opacity="0.50"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+
+                                <!-- 키보드 포커스가 여기 있을 때만 안쪽 링을 보여준다.
+                                     (기본으로 잡히는 건 '그만두기'라, 사용자가 Tab으로
+                                      일부러 넘어왔을 때만 켜진다) -->
+                                <Trigger Property="IsFocused" Value="True">
+                                    <Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+
+                                <!-- 눌림: 들어감. 반드시 호버 트리거보다 뒤에 있어야 이긴다. -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Bd" Property="RenderTransform">
+                                        <Setter.Value><TranslateTransform Y="1"/></Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Bd" Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0.6,1">
+                                                <GradientStop Color="#8F3B33" Offset="0"/>
+                                                <GradientStop Color="#A94F47" Offset="0.45"/>
+                                                <GradientStop Color="#BC665E" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <!-- 윗변 흰 광택 → 안쪽 어두운 선(패인 느낌). 두께는 그대로. -->
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#3D000000"/>
+                                    <Setter TargetName="Bd" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270"
+                                                              Color="#8F3B33" Opacity="0.34"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ══ 보조 버튼(그만두기 · 기본으로 잡히는 쪽) ═══════════════════
+                 편집기 취소 버튼과 같은 흰 바탕/헤어라인/#ECE9E3 호버를 쓰되,
+                 위험 버튼과 같은 입체 문법(그라디언트·그림자·1px 이동)을 얹었다.
+                 이 창이 열리면 키보드 포커스가 여기에 놓이고, 그때 테두리가
+                 강조 네이비(#2E4272)로 바뀌어 "이게 기본"임이 눈에 보인다. -->
+            <Style x:Key="QuietButton" TargetType="Button">
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Padding" Value="20,9"/>
+                <Setter Property="MinWidth" Value="104"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd" CornerRadius="8"
+                                    BorderThickness="1" BorderBrush="#DED9D1"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <TranslateTransform Y="0"/>
+                                </Border.RenderTransform>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#FFFFFF" Offset="0"/>
+                                        <GradientStop Color="#ECE9E3" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="6" ShadowDepth="2" Direction="270"
+                                                      Color="#121C36" Opacity="0.14"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <!-- 창이 열리면 여기에 포커스가 놓이므로 이 링이 곧
+                                         "Enter를 누르면 이게 눌린다"는 표시가 된다.
+                                         흰 바탕이라 강조 네이비를 쓴다. -->
+                                    <Border x:Name="FocusRing" CornerRadius="6" Margin="2"
+                                            BorderThickness="1" BorderBrush="#2E4272"
+                                            Visibility="Collapsed" IsHitTestVisible="False"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+
+                                <!-- 호버: 편집기 취소 버튼과 완전히 같은 #ECE9E3 단색 + 떠오름 -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#ECE9E3"/>
+                                    <Setter TargetName="Bd" Property="RenderTransform">
+                                        <Setter.Value><TranslateTransform Y="-1"/></Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Bd" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="9" ShadowDepth="3" Direction="270"
+                                                              Color="#121C36" Opacity="0.18"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+
+                                <!-- 창이 열리자마자 켜지는 포커스 링 -->
+                                <Trigger Property="IsFocused" Value="True">
+                                    <Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+
+                                <!-- 눌림: 그라디언트 뒤집기(위가 어두움) + 1px 내려앉음 + 그림자 얕게 -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Bd" Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#ECE9E3" Offset="0"/>
+                                                <GradientStop Color="#FFFFFF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Bd" Property="RenderTransform">
+                                        <Setter.Value><TranslateTransform Y="1"/></Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Bd" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270"
+                                                              Color="#121C36" Opacity="0.10"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+
+        <!-- ── 그림자 레이어 1 : 멀리 퍼지는 그림자 ── -->
+        <Border CornerRadius="15" Background="#FCFBF9">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270"
+                                  Color="#121C36" Opacity="0.26"/>
+            </Border.Effect>
+        </Border>
+
+        <!-- ── 그림자 레이어 2 : 바닥에 닿은 느낌(접지) ── -->
+        <Border CornerRadius="15" Background="#FCFBF9">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270"
+                                  Color="#121C36" Opacity="0.18"/>
+            </Border.Effect>
+        </Border>
+
+        <!-- ── 실제 카드 (편집기 안내 패널과 같은 크림 바탕 + 헤어라인) ── -->
+        <Border CornerRadius="15" Background="#FCFBF9"
+                BorderBrush="#DED9D1" BorderThickness="1" Padding="28,24,28,22">
+            <StackPanel>
+
+                <!-- 제목 : 편집기 안내 패널 제목과 같은 19px. 번들에 Bold만 있으므로 Bold. -->
+                <TextBlock x:Name="TitleText" Text="정말 진행할까요?"
+                           FontSize="19" FontWeight="Bold" Foreground="#22252B"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <!-- 본문 : 편집기 힌트 본문과 같은 톤(#565B65) -->
+                <TextBlock x:Name="MessageText" Text=""
+                           FontSize="13.5" Foreground="#565B65"
+                           TextWrapping="Wrap"
+                           LineHeight="22" LineStackingStrategy="BlockLineHeight"
+                           Margin="0,0,0,22"/>
+
+                <!-- 버튼 : 이 앱의 순서 그대로 주 동작이 왼쪽, 물러나는 쪽이 오른쪽
+                     (편집기 저장/취소, 합치기/취소와 같은 배치).
+                     ⚠ 기본으로 잡히는 것은 오른쪽 '그만두기'다 — IsDefault(Enter)와
+                       IsCancel(Esc)을 모두 그쪽에 걸고, 창이 열릴 때 키보드 포커스도
+                       그쪽에 준다(ConfirmDialog.xaml.cs). 위험한 쪽은 반드시
+                       마우스로 직접 누르거나 Tab으로 옮겨간 뒤에만 눌린다. -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="ConfirmButton" Style="{StaticResource DangerButton}"
+                            Margin="0,0,8,0" Click="Confirm_Click">
+                        <TextBlock x:Name="ConfirmLabel" Text="지우기"
+                                   FontSize="14" FontWeight="Bold" Foreground="White"
+                                   VerticalAlignment="Center">
+                            <!-- 합치기/업데이트 버튼 글자와 같은 그림자 -->
+                            <TextBlock.Effect>
+                                <DropShadowEffect BlurRadius="2" ShadowDepth="1" Direction="270"
+                                                  Color="#000000" Opacity="0.26"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Button>
+
+                    <Button x:Name="CancelButton" Style="{StaticResource QuietButton}"
+                            IsDefault="True" IsCancel="True">
+                        <TextBlock x:Name="CancelLabel" Text="그만두기"
+                                   FontSize="14" Foreground="#22252B"
+                                   VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
