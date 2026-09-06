@@ -266,8 +266,17 @@ namespace KrisZone.Editor
             card.MouseLeave += (_, _) => { if (_activeCard != card) card.BorderBrush = lineGray; };
 
             {
+                // 스타일을 안 붙이면 WPF 기본 메뉴 모양(각진 테두리·파란 하이라이트·
+                // 왼쪽 아이콘 여백)이 그대로 나온다. 정의는 LayoutBrowserWindow.xaml
+                // 의 Window.Resources에 있다(이 창에서만 쓰는 메뉴라 전역 아님).
+                // 리소스가 없어도 앱이 죽지는 않고 기본 모양으로만 떨어지도록 TryFindResource를 쓴다.
                 var menu = new ContextMenu();
-                var deleteItem = new MenuItem { Header = "삭제" };
+                if (TryFindResource("CardContextMenu") is Style menuStyle)
+                    menu.Style = menuStyle;
+
+                var deleteItem = new MenuItem { Header = "지우기" };
+                if (TryFindResource("CardMenuDangerItem") is Style deleteItemStyle)
+                    deleteItem.Style = deleteItemStyle;
                 deleteItem.Click += (_, _) =>
                 {
                     // 레이아웃은 모니터마다 직접 만든 자산인데 지우면 되돌릴 방법이 없고,
