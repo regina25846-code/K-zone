@@ -283,16 +283,23 @@ namespace KrisZone.Editor
                     // 우클릭 메뉴는 오조작이 쉬운 자리라 지우기 전에 한 번 물어본다.
                     // 기본으로 잡히는 버튼은 "그만두기"라서, Enter나 Esc를 무심코 눌러도
                     // 지워지지 않는다(ConfirmDialog 참고).
+                    // 단, "49인치"/"27인치 피벗"/"16인치 제우스랩"은 SettingsManager가
+                    // 실행할 때마다 다시 만들어 넣는 기본 템플릿이라 실제로는 안 지워진다 —
+                    // 그 경우엔 "되돌릴 수 없습니다" 대신 다시 나타난다는 사실을 알려준다.
                     string shown = string.IsNullOrEmpty(layoutRef.Name)
                         ? "이름 없음"
                         : layoutRef.Name.Length > NameShownMaxLength
                             ? layoutRef.Name.Substring(0, NameShownMaxLength) + "…"
                             : layoutRef.Name;
 
+                    string body = SettingsManager.IsRestoredOnLaunch(layoutRef)
+                        ? $"\"{shown}\" 레이아웃을 지웁니다. 기본 레이아웃이라 다음 실행 때 다시 나타납니다."
+                        : $"\"{shown}\" 레이아웃을 지웁니다. 되돌릴 수 없습니다.";
+
                     bool confirmed = ConfirmDialog.Ask(
                         this,
                         "레이아웃을 지울까요?",
-                        $"\"{shown}\" 레이아웃을 지웁니다. 되돌릴 수 없습니다.",
+                        body,
                         "지우기",
                         "그만두기");
                     if (!confirmed) return;

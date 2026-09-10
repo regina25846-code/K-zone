@@ -57,7 +57,7 @@ namespace KrisZone.Settings
             Current.Layouts.RemoveAll(l => l.IsTemplate && obsolete.Contains(l.Name));
 
             // 새 템플릿 없으면 추가, 있으면 Grid 갱신
-            var newDefaults = new[] { Create49Inch(), Create27InchPivot(), Create16InchZeusLab() };
+            var newDefaults = CreateRestoredTemplates();
             foreach (var fresh in newDefaults)
             {
                 var existing = Current.Layouts.FirstOrDefault(x => x.IsTemplate && x.Name == fresh.Name);
@@ -105,6 +105,18 @@ namespace KrisZone.Settings
 
             Save();
         }
+
+        // MigrateTemplates()가 되살리는 기본 템플릿 3종의 단일 출처.
+        // 여기서 새로 만든 이름/구성이 곧 "지워도 다음 실행 때 다시 나타나는" 대상이 된다.
+        private static ZoneLayout[] CreateRestoredTemplates() =>
+            new[] { Create49Inch(), Create27InchPivot(), Create16InchZeusLab() };
+
+        // 이 레이아웃을 지워도 다음 실행 때 MigrateTemplates()가 되살리는지 여부.
+        // 판별은 이름 기준이다 — MigrateTemplates 자체가 이름으로 매칭하기 때문에,
+        // 고정 Guid로 판별하면 형이 이름을 바꿔둔 템플릿을 오판한다.
+        public static bool IsRestoredOnLaunch(ZoneLayout layout) =>
+            layout != null && layout.IsTemplate &&
+            CreateRestoredTemplates().Any(t => t.Name == layout.Name);
 
         private static void InitDefaultLayouts()
         {
