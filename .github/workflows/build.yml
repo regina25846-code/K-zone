@@ -45,6 +45,7 @@ jobs:
           path: |
             publish/K-Zone.exe
             installer/K-Zone.Setup.${{ steps.ver.outputs.version }}.exe
+          retention-days: 3  # PND-0353 — 설치 파일은 릴리즈에도 있다. 아티팩트는 CI 직후 꺼내 볼 때만이라 3일(계정 저장 한도 보호).
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
